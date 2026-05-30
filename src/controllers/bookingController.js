@@ -64,7 +64,13 @@ const initiateBooking = async (req, res) => {
       },
     });
   } catch (error) {
-    return buildResponse(res, 400, { success: false, message: error.message });
+    console.error("[initiateBooking] FAILED", {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      body: JSON.stringify(req.body).slice(0, 500),
+    });
+    return buildResponse(res, 400, { success: false, message: error.message || String(error) });
   }
 };
 
@@ -92,13 +98,25 @@ const confirmBooking = async (req, res) => {
     return buildResponse(res, 400, { success: false, message: "Invalid Razorpay signature" });
   }
 
-  await PaymentService.markPaymentSuccess({
-    orderId: razorpayOrderId,
-    paymentId: razorpayPaymentId,
-    payload: { from: "booking_confirm" }
-  });
+  const isMockPayment = String(razorpayPaymentId || "").startsWith("pay_MOCK");
 
-  const confirmedBooking = await BookingService.confirmBooking(booking._id);
+  if (isMockPayment) {
+    // Mock gateway: no Transaction row to look up — update fields directly
+    await Booking.findByIdAndUpdate(booking._id, {
+      $set: { paymentStatus: "paid", paymentId: razorpayPaymentId }
+    });
+  } else {
+    await PaymentService.markPaymentSuccess({
+      orderId: razorpayOrderId,
+      paymentId: razorpayPaymentId,
+      payload: { from: "booking_confirm" }
+    });
+  }
+
+  const confirmedBooking = await BookingService.confirmBooking({
+    bookingId: booking._id,
+    skipPaymentCheck: true,
+  });
   const pnr = confirmedBooking.pnrMap?.[confirmedBooking.flightDetails.provider] || null;
 
   return buildResponse(res, 200, {

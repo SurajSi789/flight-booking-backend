@@ -242,6 +242,17 @@ class FlightSearchOrchestrator {
     return response;
   }
 
+  async getSeatMap({ provider = "indigo", airSegment, hostToken, hostTokenKey, travelers = [] }) {
+    const adapter = this.getProvider(provider);
+    if (!adapter) {
+      return { error: "Unsupported provider", code: 400 };
+    }
+    if (typeof adapter.getSeatMap !== "function") {
+      return { available: false, reason: "Seat selection is not supported for this provider" };
+    }
+    return adapter.getSeatMap({ airSegment, hostToken, hostTokenKey, travelers });
+  }
+
   async getFareRules({ provider }) {
     const adapter = this.getProvider(provider);
 

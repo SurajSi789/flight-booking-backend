@@ -1,5 +1,5 @@
 const express = require("express");
-const { query } = require("express-validator");
+const { query, body } = require("express-validator");
 const flightController = require("../controllers/flightController");
 const asyncHandler = require("../utils/asyncHandler");
 const validate = require("../middleware/validate");
@@ -92,6 +92,20 @@ router.get(
     query("date").optional().matches(/^\d{4}-\d{2}-\d{2}$/)
   ]),
   asyncHandler(flightController.getFareRules)
+);
+
+router.post(
+  "/seat-map",
+  buildRateLimiter({ windowMs: 30 * 1000, max: 30 }),
+  validate([
+    body("airSegment").isObject().withMessage("airSegment must be an object"),
+    body("hostToken").isString().notEmpty().withMessage("hostToken is required"),
+    body("provider")
+      .optional()
+      .isIn(["indigo", "airindia", "spicejet", "akasa", "akasaair", "flightroutes24"]),
+    body("travelers").optional().isArray(),
+  ]),
+  asyncHandler(flightController.getSeatMap)
 );
 
 module.exports = router;

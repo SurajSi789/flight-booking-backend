@@ -392,18 +392,36 @@ class BookingService {
 
     booking.fareBreakdown = providerInit.fareBreakdown || booking.fareBreakdown;
     booking.sessionStateKey = this.getSessionKey(booking._id);
+    // Persist session state on the booking itself as Redis fallback
+    booking.providerMeta = {
+      ...(booking.providerMeta || {}),
+      sessionCache: {
+        provider,
+        token: providerInit.token || null,
+        passengerKeys: providerInit.passengerKeys || [],
+        journeyKey: providerInit.journeyKey || null,
+        hostToken: providerInit.hostToken || null,
+        pricingSolution: providerInit.pricingSolution || null,
+        optionalServices: providerInit.optionalServices || [],
+        fareBreakdown: booking.fareBreakdown
+      }
+    };
     await booking.save();
 
-    await this.setSessionState(booking._id, {
-      provider,
-      token: providerInit.token || null,
-      passengerKeys: providerInit.passengerKeys || [],
-      journeyKey: providerInit.journeyKey || null,
-      hostToken: providerInit.hostToken || null,
-      pricingSolution: providerInit.pricingSolution || null,
-      optionalServices: providerInit.optionalServices || [],
-      fareBreakdown: booking.fareBreakdown
-    });
+    try {
+      await this.setSessionState(booking._id, {
+        provider,
+        token: providerInit.token || null,
+        passengerKeys: providerInit.passengerKeys || [],
+        journeyKey: providerInit.journeyKey || null,
+        hostToken: providerInit.hostToken || null,
+        pricingSolution: providerInit.pricingSolution || null,
+        optionalServices: providerInit.optionalServices || [],
+        fareBreakdown: booking.fareBreakdown
+      });
+    } catch (redisErr) {
+      console.warn(`[BookingService] Redis session write failed (using booking.providerMeta fallback): ${redisErr.message}`);
+    }
 
     return {
       bookingId: booking._id,
@@ -413,10 +431,15 @@ class BookingService {
   }
 
   async confirmBooking(input, maybePaymentTxnId) {
-    const payload =
-      typeof input === "object" && input !== null
-        ? input
-        : { bookingId: input, paymentTxnId: maybePaymentTxnId, skipPaymentCheck: true };
+    // Distinguish a plain payload object from a Mongoose ObjectId (also typeof "object").
+    // A valid payload must contain at least one of the known keys.
+    const isPayload =
+      typeof input === "object" &&
+      input !== null &&
+      ("bookingId" in input || "paymentTxnId" in input || "skipPaymentCheck" in input);
+    const payload = isPayload
+      ? input
+      : { bookingId: input, paymentTxnId: maybePaymentTxnId, skipPaymentCheck: true };
     const { bookingId, paymentTxnId, skipPaymentCheck } = payload;
 
     const booking = await Booking.findById(bookingId);
@@ -442,9 +465,11 @@ class BookingService {
       }
     }
 
-    const sessionState = await this.getSessionState(booking._id);
+    let sessionState = await this.getSessionState(booking._id);
     if (!sessionState) {
-      throw new Error("Booking session expired or missing");
+      // Redis unavailable or session expired — fall back to the copy stored on the booking
+      sessionState = booking.providerMeta?.sessionCache || {};
+      console.warn(`[BookingService] Redis session missing for ${booking._id}, using booking.providerMeta.sessionCache`);
     }
 
     const provider = booking.flightDetails.provider;
@@ -543,7 +568,8 @@ class BookingService {
     };
     await booking.save();
 
-    await Promise.all([
+    // Side-effects: fire-and-forget — never let them abort the confirmation response
+    Promise.all([
       bookingEmailQueue.add("booking-confirmation", { bookingId: booking._id.toString() }),
       NotificationService.queueNotification({
         userId: booking.userId,
@@ -552,7 +578,9 @@ class BookingService {
         body: `Booking ${booking.bookingRef} confirmed.`,
         metadata: { bookingId: booking._id.toString(), bookingRef: booking.bookingRef, pnr }
       })
-    ]);
+    ]).catch((err) => {
+      console.warn(`[BookingService] Post-confirmation side-effect failed (non-fatal): ${err.message}`);
+    });
 
     return {
       bookingRef: booking.bookingRef,

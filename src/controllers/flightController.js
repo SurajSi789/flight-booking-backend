@@ -157,9 +157,32 @@ const getFareRules = async (req, res) => {
   return res.json(success(result, "Fare rules fetched"));
 };
 
+const getSeatMap = async (req, res) => {
+  const { provider = "indigo", airSegment, hostToken, hostTokenKey, travelers = [] } = req.body;
+
+  if (!airSegment || !hostToken) {
+    return res.status(400).json({ success: false, message: "airSegment and hostToken are required" });
+  }
+
+  const result = await FlightSearchOrchestrator.getSeatMap({
+    provider,
+    airSegment,
+    hostToken,
+    hostTokenKey,
+    travelers,
+  });
+
+  if (result?.error) {
+    return res.status(result.code || 500).json({ success: false, message: result.error });
+  }
+
+  return res.json(success(result, "Seat map fetched"));
+};
+
 module.exports = {
   searchFlights,
   verifyFlight,
   getFareCalendar,
-  getFareRules
+  getFareRules,
+  getSeatMap,
 };

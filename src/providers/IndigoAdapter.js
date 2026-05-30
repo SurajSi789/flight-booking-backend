@@ -342,7 +342,7 @@ const buildAirPriceReq = ({
 </air:AirPriceReq>`);
 };
 
-const buildSeatMapReq = ({ airSegment, hostToken, travelers, targetBranch, traceId }) => {
+const buildSeatMapReq = ({ airSegment, hostToken, hostTokenKey = "HT1", travelers, targetBranch, traceId }) => {
   if (!hostToken) {
     throw new Error("HostToken is required for seat map request");
   }
@@ -351,11 +351,13 @@ const buildSeatMapReq = ({ airSegment, hostToken, travelers, targetBranch, trace
   const segmentXml = segments
     .map(
       (segment) =>
-        `<air:AirSegment Key="${escapeXml(segment.key || segment.segmentRef || `SEG-${crypto.randomUUID()}`)}" Carrier="6E" FlightNumber="${escapeXml(
+        `<air:AirSegment Key="${escapeXml(segment.key || segment.segmentRef || `SEG-${crypto.randomUUID()}`)}" Group="0" Carrier="6E" FlightNumber="${escapeXml(
           segment.flightNumber || segment.flightNo || "0"
-        )}" Origin="${escapeXml(segment.origin)}" Destination="${escapeXml(segment.destination)}" DepartureTime="${escapeXml(
+        )}" ProviderCode="ACH" Origin="${escapeXml(segment.origin)}" Destination="${escapeXml(segment.destination)}" DepartureTime="${escapeXml(
           segment.departureAt
-        )}" ArrivalTime="${escapeXml(segment.arrivalAt)}"/>`
+        )}" ArrivalTime="${escapeXml(segment.arrivalAt)}"${
+          segment.bookingCode ? ` ClassOfService="${escapeXml(segment.bookingCode)}"` : ""
+        } HostTokenRef="${escapeXml(hostTokenKey)}"/>`
     )
     .join("");
 
@@ -363,19 +365,19 @@ const buildSeatMapReq = ({ airSegment, hostToken, travelers, targetBranch, trace
     .map(
       (traveler, idx) =>
         `<air:SearchTraveler Key="${escapeXml(traveler.key || `TRV${idx + 1}`)}"><com:BookingTravelerName First="${escapeXml(
-          traveler.firstName
-        )}" Last="${escapeXml(traveler.lastName)}"/></air:SearchTraveler>`
+          traveler.firstName || "TRAVELER"
+        )}" Last="${escapeXml(traveler.lastName || "LAST")}"/></air:SearchTraveler>`
     )
     .join("");
 
   return buildSoapEnvelope(`
 <air:SeatMapReq TargetBranch="${escapeXml(
     targetBranch || env.providers.indigo.targetBranch
-  )}" TraceId="${escapeXml(traceId || crypto.randomUUID())}" ReturnSeatPricing="true" ReturnBrandingInfo="true">
+  )}" TraceId="${escapeXml(traceId || crypto.randomUUID())}" ReturnSeatPricing="true">
   <com:BillingPointOfSaleInfo OriginApplication="UAPI"/>
   ${segmentXml}
   ${travelerXml}
-  <com:HostToken Key="${escapeXml(extractAttribute(hostToken, "Key") || "HT1")}">${escapeXml(hostToken)}</com:HostToken>
+  <com:HostToken Key="${escapeXml(hostTokenKey)}">${escapeXml(hostToken)}</com:HostToken>
 </air:SeatMapReq>`);
 };
 
@@ -988,6 +990,70 @@ class IndigoAdapter extends BaseFlightProvider {
       return { provider: "indigo", bookingRef, status: "cancel_requested" };
     } catch (error) {
       return this.wrapError(error, 500);
+    }
+  }
+
+  async getSeatMap({ airSegment, hostToken, hostTokenKey = "HT1", travelers = [] }) {
+    const isFault101 = (xml) => {
+      const s = String(xml || "");
+      if (!s.includes("Code")) return false;
+      const codeBlock = extractFirstBlock(s, "Code");
+      const typeBlock = extractFirstBlock(s, "Type");
+      return (
+        codeBlock?.[2]?.trim() === "101" &&
+        String(typeBlock?.[2] || "").toLowerCase() === "business"
+      );
+    };
+
+    try {
+      const xml = buildSeatMapReq({ airSegment, hostToken, hostTokenKey, travelers });
+      const responseXml = await this.postSoap(xml);
+
+      // Handle SOAP fault returned with HTTP 200 (some providers)
+      if (isFault101(responseXml)) {
+        return { provider: "indigo", available: false, reason: "Seat map is unavailable for this flight" };
+      }
+
+      const { seatRows, optionalServices } = parseSeatMapResponse(responseXml);
+
+      // Build a price lookup keyed by OptionalService ref
+      const priceByRef = {};
+      for (const svc of optionalServices) {
+        if (svc.key && svc.price) {
+          priceByRef[svc.key] = Number(String(svc.price).replace(/[A-Z]/g, "")) || null;
+        }
+      }
+
+      const rows = seatRows
+        .map((row) => ({
+          rowNumber: Number(row.rowNumber) || null,
+          seats: (row.seats || []).map((seat) => {
+            const avail = String(seat.availability || "").toLowerCase();
+            const available = avail === "available" || avail === "open";
+            const occupied = !available && (avail === "occupied" || avail.includes("not"));
+            return {
+              code: seat.seatCode,
+              column: String(seat.seatCode || "").slice(-1).toUpperCase(),
+              available,
+              occupied,
+              paid: seat.paid,
+              price:
+                seat.paid && seat.optionalServiceRef
+                  ? priceByRef[seat.optionalServiceRef] || null
+                  : null,
+              characteristics: seat.characteristics || [],
+            };
+          }),
+        }))
+        .sort((a, b) => (a.rowNumber || 0) - (b.rowNumber || 0));
+
+      return { provider: "indigo", available: true, rows };
+    } catch (error) {
+      // Handle SOAP fault returned with HTTP 500 (standard)
+      if (isFault101(error.response?.data)) {
+        return { provider: "indigo", available: false, reason: "Seat map is unavailable for this flight" };
+      }
+      return this.wrapError(error, 502);
     }
   }
 

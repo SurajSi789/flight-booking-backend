@@ -28,10 +28,13 @@ if (missingOptional.length && process.env.NODE_ENV !== "production") {
 
 const parseCsv = (v = "") => v.split(",").map((s) => s.trim()).filter(Boolean);
 
-// Payment mock mode: true when no real Razorpay key is provided
+// Payment mock mode: true when no real Razorpay key is provided or it looks like a placeholder
+const rzpKey = process.env.RAZORPAY_KEY_ID || "";
 const isPaymentMock =
-  !process.env.RAZORPAY_KEY_ID ||
-  process.env.RAZORPAY_KEY_ID === "rzp_test_mock" ||
+  !rzpKey ||
+  rzpKey === "rzp_test_mock" ||
+  rzpKey.includes("xxxx") ||
+  rzpKey.includes("xxxxxxxx") ||
   process.env.PAYMENT_MOCK === "true";
 
 const env = {
