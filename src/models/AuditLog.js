@@ -8,27 +8,28 @@ const schemaOptions = {
 
 const AuditLogSchema = new mongoose.Schema(
   {
-    /** End-user id involved in action. */
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    /** Admin id executing privileged action. */
-    adminId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    /** Action name (e.g. BOOKING_CANCELLED). */
-    action: { type: String, required: true, trim: true },
-    /** Resource type impacted by action. */
+    // Polymorphic actor — either a customer User or an AdminUser
+    actor:       { type: mongoose.Schema.Types.ObjectId, refPath: "actorModel" },
+    actorModel:  { type: String, enum: ["User", "AdminUser"], default: "AdminUser" },
+
+    // Kept for backwards compatibility with existing controller calls
+    userId:  { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    adminId: { type: mongoose.Schema.Types.ObjectId, ref: "AdminUser" },
+
+    action:       { type: String, required: true, trim: true },
     resourceType: { type: String, trim: true },
-    /** Resource id impacted by action. */
-    resourceId: { type: mongoose.Schema.Types.ObjectId },
-    /** Entity state before mutation. */
-    before: { type: mongoose.Schema.Types.Mixed },
-    /** Entity state after mutation. */
-    after: { type: mongoose.Schema.Types.Mixed },
-    /** Request IP address. */
-    ipAddress: { type: String, trim: true },
-    /** Request user-agent string. */
-    userAgent: { type: String, trim: true }
+    resourceId:   { type: mongoose.Schema.Types.ObjectId },
+    before:       { type: mongoose.Schema.Types.Mixed },
+    after:        { type: mongoose.Schema.Types.Mixed },
+    ipAddress:    { type: String, trim: true },
+    userAgent:    { type: String, trim: true },
   },
   schemaOptions
 );
+
+AuditLogSchema.index({ actor: 1, createdAt: -1 });
+AuditLogSchema.index({ action: 1, createdAt: -1 });
+AuditLogSchema.index({ resourceType: 1, resourceId: 1 });
 
 const AuditLog = mongoose.model("AuditLog", AuditLogSchema);
 

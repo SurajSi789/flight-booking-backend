@@ -19,8 +19,10 @@ const monthStart = (date = new Date()) => new Date(date.getFullYear(), date.getM
 
 const createAuditLog = async (req, { action, resourceType, resourceId, userId, before, after }) =>
   AuditLog.create({
-    userId: userId || null,
-    adminId: req.user.userId,
+    actor:      req.adminUser.id,
+    actorModel: "AdminUser",
+    userId:     userId || null,
+    adminId:    req.adminUser.id,
     action,
     resourceType,
     resourceId,
@@ -420,7 +422,7 @@ const getAdminCoupons = async (req, res) => {
 };
 
 const createAdminCoupon = async (req, res) => {
-  const payload = { ...req.body, code: String(req.body.code).toUpperCase().trim(), createdBy: req.user.userId };
+  const payload = { ...req.body, code: String(req.body.code).toUpperCase().trim(), createdBy: req.adminUser.id };
   if (/\s/.test(payload.code)) {
     return res.status(400).json({ success: false, message: "Coupon code must not contain spaces" });
   }
@@ -500,7 +502,7 @@ const getAdminOffers = async (req, res) => {
 };
 
 const createAdminOffer = async (req, res) => {
-  const offer = await Offer.create({ ...req.body, createdBy: req.user.userId });
+  const offer = await Offer.create({ ...req.body, createdBy: req.adminUser.id });
   await createAuditLog(req, {
     action: "ADMIN_OFFER_CREATED",
     resourceType: "Offer",
@@ -798,6 +800,106 @@ const revenueReport = async (req, res) => {
   return res.json({ success: true, message: "Revenue report fetched", data: rows });
 };
 
+// ── Cancellations ─────────────────────────────────────────────────────────────
+const getCancellations = async (req, res) => {
+  const page  = Math.max(Number(req.query.page  || 1), 1);
+  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 100);
+  const skip  = (page - 1) * limit;
+
+  const filter = { bookingStatus: "cancelled" };
+  if (req.query.from || req.query.to) {
+    const dateFilter = parseDateRange(req.query.from, req.query.to);
+    filter.cancelledAt = dateFilter.createdAt;
+  }
+  if (req.query.provider) filter["flightDetails.provider"] = req.query.provider;
+  if (req.query.refundStatus) filter.refundStatus = req.query.refundStatus;
+
+  const [bookings, total] = await Promise.all([
+    Booking.find(filter)
+      .populate("userId", "name email phone")
+      .sort({ cancelledAt: -1, updatedAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Booking.countDocuments(filter)
+  ]);
+
+  return res.json({
+    success: true,
+    data: { bookings, total, page, pages: Math.ceil(total / limit) }
+  });
+};
+
+// ── Support Queries ───────────────────────────────────────────────────────────
+const ChatSession = require("../models/ChatSession");
+
+const getSupportQueries = async (req, res) => {
+  const page  = Math.max(Number(req.query.page  || 1), 1);
+  const limit = Math.min(Math.max(Number(req.query.limit || 20), 1), 100);
+  const skip  = (page - 1) * limit;
+
+  const filter = { isEscalated: true };
+  if (req.query.resolved === "true")  filter.resolvedAt = { $exists: true };
+  if (req.query.resolved === "false") filter.resolvedAt = { $exists: false };
+
+  const [sessions, total] = await Promise.all([
+    ChatSession.find(filter)
+      .populate("userId", "name email phone")
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select("-archivedMessages"),
+    ChatSession.countDocuments(filter)
+  ]);
+
+  return res.json({
+    success: true,
+    data: { sessions, total, page, pages: Math.ceil(total / limit) }
+  });
+};
+
+const getSupportQueryById = async (req, res) => {
+  const session = await ChatSession.findById(req.params.sessionId)
+    .populate("userId", "name email phone walletBalance");
+  if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+
+  // Merge live + archived messages sorted by timestamp
+  const allMessages = [
+    ...(session.archivedMessages || []),
+    ...(session.messages || [])
+  ].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  return res.json({ success: true, data: { session, messages: allMessages } });
+};
+
+const resolveSupportQuery = async (req, res) => {
+  const session = await ChatSession.findById(req.params.sessionId);
+  if (!session) return res.status(404).json({ success: false, message: "Session not found" });
+
+  session.resolvedAt  = new Date();
+  session.resolvedBy  = req.adminUser.id;
+  session.isEscalated = false;
+  if (req.body.note) {
+    session.messages.push({
+      role:      "assistant",
+      content:   `[Admin note by ${req.adminUser.email}]: ${req.body.note}`,
+      timestamp: new Date()
+    });
+  }
+  await session.save();
+
+  await createAuditLog(req, {
+    action:       "SUPPORT_QUERY_RESOLVED",
+    resourceType: "ChatSession",
+    resourceId:   session._id,
+    userId:       session.userId,
+  });
+
+  return res.json({ success: true, message: "Query resolved" });
+};
+
+// ── Enhanced Offers ───────────────────────────────────────────────────────────
+// (getAdminOffers, createAdminOffer already exist above — patchAdminOffer now handles new fields)
+
 module.exports = {
   getStats,
   getAdminBookings,
@@ -822,5 +924,9 @@ module.exports = {
   getPendingRefunds,
   approveRefund,
   bookingsReport,
-  revenueReport
+  revenueReport,
+  getCancellations,
+  getSupportQueries,
+  getSupportQueryById,
+  resolveSupportQuery,
 };

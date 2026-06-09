@@ -58,6 +58,43 @@ const CouponSchema = new mongoose.Schema(
     applicableProviders: { type: [String], default: [] },
     /** Route restrictions (empty means all). */
     applicableRoutes: { type: [routeSchema], default: [] },
+
+    // ── Extended offer-type fields ────────────────────────────────────────────
+    /** Offer category for display grouping and validation logic. */
+    offerType: {
+      type: String,
+      enum: ["general", "bank_offer", "airline_offer", "cashback", "first_booking", "corporate", "seasonal", "wallet"],
+      default: "general"
+    },
+    /** Bank code restriction — only applies when paid via this bank's card/netbanking. */
+    bankCode: { type: String, trim: true, uppercase: true, default: null },
+    /** Airline code restriction — e.g. 6E, SG, I5, QP (empty = all airlines). */
+    airlineCode: { type: String, trim: true, uppercase: true, default: null },
+    /** Payment method restriction. */
+    paymentMethod: {
+      type: String,
+      enum: ["any", "credit_card", "debit_card", "net_banking", "upi", "wallet"],
+      default: "any"
+    },
+    /** Trip type restriction. */
+    tripType: {
+      type: String,
+      enum: ["any", "one_way", "round_trip"],
+      default: "any"
+    },
+    /** Travel class restriction. */
+    travelClass: {
+      type: String,
+      enum: ["any", "economy", "business", "premium_economy"],
+      default: "any"
+    },
+    /** Whether coupon is restricted to first booking only. */
+    firstBookingOnly: { type: Boolean, default: false },
+    /** Cashback amount credited to wallet (when offerType = cashback). */
+    cashbackAmount: { type: Number, min: 0, default: 0 },
+    /** Internal notes for ops team. */
+    adminNotes: { type: String, trim: true },
+
     /** User/admin who created coupon. */
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },

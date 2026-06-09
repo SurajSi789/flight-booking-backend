@@ -4,7 +4,7 @@ const dotenv = require("dotenv");
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 // Only these are truly required to boot
-const coreRequired = ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "REDIS_URL"];
+const coreRequired = ["MONGO_URI", "JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "REDIS_URL", "ADMIN_JWT_SECRET"];
 
 const missing = coreRequired.filter((k) => !process.env[k]);
 if (missing.length > 0) {
@@ -44,6 +44,8 @@ const env = {
   redisUrl: process.env.REDIS_URL,
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET,
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+  adminJwtSecret: process.env.ADMIN_JWT_SECRET,
+  adminCorsOrigin: process.env.ADMIN_CORS_ORIGIN || null,
   corsWhitelist: parseCsv(process.env.CORS_WHITELIST),
   isPaymentMock,
   smtp: {

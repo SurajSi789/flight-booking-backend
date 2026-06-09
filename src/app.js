@@ -18,6 +18,7 @@ const paymentRoutes = require("./routes/payments");
 const couponRoutes = require("./routes/coupons");
 const catalogRoutes = require("./routes/catalog");
 const userRoutes = require("./routes/users");
+const adminAuthRoutes = require("./routes/adminAuth");
 const adminRoutes = require("./routes/admin");
 const chatRoutes = require("./routes/chat");
 const notificationRoutes = require("./routes/notifications");
@@ -32,15 +33,20 @@ const morganLogger = winston.createLogger({
 });
 
 app.use(helmet());
+const allowedOrigins = new Set([
+  ...env.corsWhitelist,
+  ...(env.adminCorsOrigin ? [env.adminCorsOrigin] : []),
+]);
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || env.corsWhitelist.length === 0 || env.corsWhitelist.includes(origin)) {
+      if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin)) {
         return callback(null, true);
       }
       return callback(new Error("CORS not allowed"));
     },
-    credentials: true
+    credentials: true,
   })
 );
 app.use(compression());
@@ -88,6 +94,9 @@ app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/coupons", couponRoutes);
 app.use("/api/v1", catalogRoutes);
 app.use("/api/v1/users", userRoutes);
+// Admin auth (login/logout/MFA) mounted first — these routes are public (no token required for /login)
+app.use("/api/v1/admin/auth", adminAuthRoutes);
+// All other admin routes require a valid admin JWT (enforced inside adminRoutes)
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/chat", chatRoutes);
 app.use("/api/v1/notifications", notificationRoutes);
