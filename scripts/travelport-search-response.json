@@ -1,0 +1,4352 @@
+{
+  "CatalogProductOfferingsResponse": {
+    "@type": "CatalogProductOfferingsResponse",
+    "transactionId": "4b634c1c28e8747352e6d53a43c3cb91",
+    "CatalogProductOfferings": {
+      "@type": "CatalogProductOfferings",
+      "CatalogProductOffering": [
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o1",
+          "Departure": "DEL",
+          "Arrival": "XNB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b0"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s3",
+                "s4"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b0"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p0"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T0"
+                  },
+                  "CombinabilityCode": [
+                    "j1"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 16410,
+                    "TotalTaxes": 3074,
+                    "TotalFees": 0,
+                    "TotalPrice": 19484,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 16410,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 3074,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 821
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 19484
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            },
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s5",
+                "s6"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b0"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p1"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T0"
+                  },
+                  "CombinabilityCode": [
+                    "j1"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 16410,
+                    "TotalTaxes": 3074,
+                    "TotalFees": 0,
+                    "TotalPrice": 19484,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 16410,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 3074,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 821
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 19484
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o2",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b1"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s24",
+                "s25"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b1"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p2"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T1"
+                  },
+                  "CombinabilityCode": [
+                    "j2"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 6090,
+                    "TotalTaxes": 13914,
+                    "TotalFees": 0,
+                    "TotalPrice": 20004,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 6090,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 13914,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 846
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 7178
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 3637
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 20004
+                        },
+                        "Surcharges": {
+                          "@type": "SurchargesDetail",
+                          "approximateInd": true,
+                          "TotalSurcharges": 2090,
+                          "Surcharge": [
+                            {
+                              "currencyCode": "INR",
+                              "purpose": "Other",
+                              "decimalPlace": 0,
+                              "value": 1900
+                            },
+                            {
+                              "currencyCode": "INR",
+                              "purpose": "Other",
+                              "decimalPlace": 0,
+                              "value": 190
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o3",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b2"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s11",
+                "s12"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b2"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p3"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T2"
+                  },
+                  "CombinabilityCode": [
+                    "j3"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 12730,
+                    "TotalTaxes": 8261,
+                    "TotalFees": 0,
+                    "TotalPrice": 20991,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 12730,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 8261,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 893
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 4785
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 20991
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o4",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b2"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s9",
+                "s10"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b2"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p4"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T3"
+                  },
+                  "CombinabilityCode": [
+                    "j4"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 12550,
+                    "TotalTaxes": 8566,
+                    "TotalFees": 0,
+                    "TotalPrice": 21116,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 12550,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 8566,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 899
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 5084
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 21116
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o5",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b2"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s18",
+                "s19"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b2"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p5"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T4"
+                  },
+                  "CombinabilityCode": [
+                    "j5"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 12700,
+                    "TotalTaxes": 8573,
+                    "TotalFees": 0,
+                    "TotalPrice": 21273,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 12700,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 8573,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 906
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 5084
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 21273
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o6",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b2"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s22",
+                "s23"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b2"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p6"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T5"
+                  },
+                  "CombinabilityCode": [
+                    "j6"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 15215,
+                    "TotalTaxes": 8699,
+                    "TotalFees": 0,
+                    "TotalPrice": 23914,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 15215,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 8699,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 1032
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 5084
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 23914
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o7",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b3"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s1",
+                "s2"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b3"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p7"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T6"
+                  },
+                  "CombinabilityCode": [
+                    "j7"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 10695,
+                    "TotalTaxes": 13620,
+                    "TotalFees": 0,
+                    "TotalPrice": 24315,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 10695,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 13620,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 1001
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "I2",
+                                "value": 250
+                              },
+                              {
+                                "taxCode": "OM",
+                                "value": 250
+                              },
+                              {
+                                "taxCode": "S6",
+                                "value": 549
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 7403
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 1914
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 24315
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            },
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s7",
+                "s8"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b3"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p8"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T6"
+                  },
+                  "CombinabilityCode": [
+                    "j7"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 10695,
+                    "TotalTaxes": 13620,
+                    "TotalFees": 0,
+                    "TotalPrice": 24315,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 10695,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 13620,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 1001
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "I2",
+                                "value": 250
+                              },
+                              {
+                                "taxCode": "OM",
+                                "value": 250
+                              },
+                              {
+                                "taxCode": "S6",
+                                "value": 549
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 7403
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 1914
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 24315
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o8",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b4"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s20",
+                "s21"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b4"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p9"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T7"
+                  },
+                  "CombinabilityCode": [
+                    "j8"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 21310,
+                    "TotalTaxes": 9004,
+                    "TotalFees": 0,
+                    "TotalPrice": 30314,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 21310,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 9004,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 1337
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 5084
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 30314
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o9",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b4"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s13",
+                "s14"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b4"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p10"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T8"
+                  },
+                  "CombinabilityCode": [
+                    "j9"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 21765,
+                    "TotalTaxes": 8712,
+                    "TotalFees": 0,
+                    "TotalPrice": 30477,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 21765,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 8712,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 1344
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 131
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 4785
+                              },
+                              {
+                                "taxCode": "YR",
+                                "value": 330
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 30477
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "@type": "CatalogProductOffering",
+          "sequence": 1,
+          "id": "o10",
+          "Departure": "DEL",
+          "Arrival": "DXB",
+          "Brand": [
+            {
+              "@type": "BrandID",
+              "BrandRef": "b5"
+            }
+          ],
+          "ProductBrandOptions": [
+            {
+              "@type": "ProductBrandOptions",
+              "flightRefs": [
+                "s15",
+                "s16",
+                "s17"
+              ],
+              "ProductBrandOffering": [
+                {
+                  "@type": "ProductBrandOffering",
+                  "Brand": {
+                    "@type": "BrandID",
+                    "BrandRef": "b5"
+                  },
+                  "Product": [
+                    {
+                      "@type": "ProductID",
+                      "productRef": "p11"
+                    }
+                  ],
+                  "TermsAndConditions": {
+                    "@type": "TermsAndConditionsID",
+                    "termsAndConditionsRef": "T9"
+                  },
+                  "CombinabilityCode": [
+                    "j10"
+                  ],
+                  "BestCombinablePrice": {
+                    "@type": "BestCombinablePriceDetail",
+                    "CurrencyCode": {
+                      "decimalPlace": 0,
+                      "value": "INR"
+                    },
+                    "Base": 163295,
+                    "TotalTaxes": 18633,
+                    "TotalFees": 0,
+                    "TotalPrice": 181928,
+                    "PriceBreakdown": [
+                      {
+                        "@type": "PriceBreakdownAir",
+                        "quantity": 1,
+                        "requestedPassengerType": "ADT",
+                        "Amount": {
+                          "@type": "Amount",
+                          "CurrencyCode": {
+                            "decimalPlace": 0,
+                            "value": "INR"
+                          },
+                          "Base": 163295,
+                          "Taxes": {
+                            "@type": "TaxesDetail",
+                            "TotalTaxes": 18633,
+                            "Tax": [
+                              {
+                                "taxCode": "IN",
+                                "value": 767
+                              },
+                              {
+                                "taxCode": "K3",
+                                "value": 8409
+                              },
+                              {
+                                "taxCode": "P2",
+                                "value": 1355
+                              },
+                              {
+                                "taxCode": "F6",
+                                "value": 1303
+                              },
+                              {
+                                "taxCode": "ZR",
+                                "value": 262
+                              },
+                              {
+                                "taxCode": "BH",
+                                "value": 1528
+                              },
+                              {
+                                "taxCode": "HM",
+                                "value": 128
+                              },
+                              {
+                                "taxCode": "YQ",
+                                "value": 4881
+                              }
+                            ]
+                          },
+                          "Fees": {
+                            "@type": "FeesDetail",
+                            "TotalFees": 0
+                          },
+                          "Total": 181928
+                        },
+                        "Surcharges": {
+                          "@type": "SurchargesDetail",
+                          "approximateInd": true,
+                          "TotalSurcharges": 33215,
+                          "Surcharge": [
+                            {
+                              "currencyCode": "INR",
+                              "purpose": "Other",
+                              "decimalPlace": 0,
+                              "value": 33215
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "ContentSource": "GDS"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Result": {
+      "@type": "Result"
+    },
+    "ReferenceList": [
+      {
+        "@type": "ReferenceListFlight",
+        "Flight": [
+          {
+            "@type": "FlightDetail",
+            "distance": 1201,
+            "duration": "PT3H20M",
+            "carrier": "WY",
+            "number": "246",
+            "equipment": "738",
+            "id": "s1",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "16:00:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "MCT",
+              "date": "2026-06-29",
+              "time": "17:50:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1272,
+            "duration": "PT4H5M",
+            "carrier": "AI",
+            "number": "9091",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "320",
+            "operatingCarrierNumber": "197",
+            "id": "s10",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "ATQ",
+              "date": "2026-06-30",
+              "time": "02:25:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-30",
+              "time": "05:00:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1289,
+            "duration": "PT3H15M",
+            "carrier": "AI",
+            "number": "2473",
+            "equipment": "32N",
+            "id": "s11",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "15:25:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "COK",
+              "date": "2026-06-29",
+              "time": "18:40:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1731,
+            "duration": "PT4H10M",
+            "carrier": "AI",
+            "number": "9105",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "737",
+            "operatingCarrierNumber": "433",
+            "id": "s12",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "COK",
+              "date": "2026-06-29",
+              "time": "21:00:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-29",
+              "time": "23:40:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1289,
+            "duration": "PT3H10M",
+            "carrier": "AI",
+            "number": "2458",
+            "equipment": "32N",
+            "id": "s13",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "12:10:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "COK",
+              "date": "2026-06-29",
+              "time": "15:20:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1731,
+            "duration": "PT4H10M",
+            "carrier": "AI",
+            "number": "9105",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "737",
+            "operatingCarrierNumber": "433",
+            "id": "s14",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "COK",
+              "date": "2026-06-29",
+              "time": "21:00:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-29",
+              "time": "23:40:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1428,
+            "duration": "PT3H35M",
+            "carrier": "EY",
+            "number": "215",
+            "equipment": "32Q",
+            "id": "s15",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "15:55:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "18:00:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 271,
+            "duration": "PT1H15M",
+            "carrier": "EY",
+            "number": "3153",
+            "operatingCarrier": "GF",
+            "operatingCarrierName": "GULF AIR COMPANY",
+            "equipment": "320",
+            "operatingCarrierNumber": "547",
+            "id": "s16",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "23:50:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "BAH",
+              "date": "2026-06-30",
+              "time": "00:05:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 300,
+            "duration": "PT1H20M",
+            "carrier": "GF",
+            "number": "500",
+            "equipment": "32N",
+            "id": "s17",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "BAH",
+              "date": "2026-06-30",
+              "time": "01:10:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "DXB",
+              "date": "2026-06-30",
+              "time": "03:30:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 263,
+            "duration": "PT1H5M",
+            "carrier": "AI",
+            "number": "2499",
+            "equipment": "32N",
+            "id": "s18",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "06:00:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "3",
+              "location": "LKO",
+              "date": "2026-06-29",
+              "time": "07:05:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1595,
+            "duration": "PT4H15M",
+            "carrier": "AI",
+            "number": "9135",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "320",
+            "operatingCarrierNumber": "193",
+            "id": "s19",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "LKO",
+              "date": "2026-06-29",
+              "time": "15:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-29",
+              "time": "18:00:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 230,
+            "duration": "PT1H10M",
+            "carrier": "WY",
+            "number": "611",
+            "equipment": "7M8",
+            "id": "s2",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "MCT",
+              "date": "2026-06-29",
+              "time": "20:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "DXB",
+              "date": "2026-06-29",
+              "time": "21:25:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 258,
+            "duration": "PT1H10M",
+            "carrier": "AI",
+            "number": "491",
+            "equipment": "321",
+            "id": "s20",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "11:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "ATQ",
+              "date": "2026-06-29",
+              "time": "12:25:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1272,
+            "duration": "PT4H5M",
+            "carrier": "AI",
+            "number": "9091",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "320",
+            "operatingCarrierNumber": "197",
+            "id": "s21",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "ATQ",
+              "date": "2026-06-30",
+              "time": "02:25:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-30",
+              "time": "05:00:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 263,
+            "duration": "PT1H10M",
+            "carrier": "AI",
+            "number": "1720",
+            "equipment": "32N",
+            "id": "s22",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "2",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "20:30:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "3",
+              "location": "LKO",
+              "date": "2026-06-29",
+              "time": "21:40:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1595,
+            "duration": "PT4H15M",
+            "carrier": "AI",
+            "number": "9135",
+            "operatingCarrier": "IX",
+            "operatingCarrierName": "AIR INDIA EXPRESS",
+            "equipment": "320",
+            "operatingCarrierNumber": "193",
+            "id": "s23",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "LKO",
+              "date": "2026-06-30",
+              "time": "15:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "2",
+              "location": "DXB",
+              "date": "2026-06-30",
+              "time": "18:00:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1489,
+            "duration": "PT3H35M",
+            "carrier": "UL",
+            "number": "196",
+            "equipment": "320",
+            "id": "s24",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "18:45:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "CMB",
+              "date": "2026-06-29",
+              "time": "22:20:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 2043,
+            "duration": "PT4H40M",
+            "carrier": "UL",
+            "number": "225",
+            "equipment": "333",
+            "id": "s25",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "CMB",
+              "date": "2026-06-30",
+              "time": "18:30:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "DXB",
+              "date": "2026-06-30",
+              "time": "21:40:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1428,
+            "duration": "PT3H40M",
+            "carrier": "EY",
+            "number": "219",
+            "equipment": "351",
+            "id": "s3",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "04:50:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "07:00:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 67,
+            "duration": "PT2H",
+            "carrier": "EY",
+            "number": "5416",
+            "equipment": "BUS",
+            "id": "s4",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "08:25:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "XNB",
+              "date": "2026-06-29",
+              "time": "10:25:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1428,
+            "duration": "PT3H40M",
+            "carrier": "EY",
+            "number": "219",
+            "equipment": "351",
+            "id": "s5",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "04:50:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "07:00:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 67,
+            "duration": "PT2H",
+            "carrier": "EY",
+            "number": "5418",
+            "equipment": "BUS",
+            "id": "s6",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "A",
+              "location": "AUH",
+              "date": "2026-06-29",
+              "time": "09:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "XNB",
+              "date": "2026-06-29",
+              "time": "11:15:00"
+            },
+            "AvailabilitySourceCode": "Q"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 1201,
+            "duration": "PT3H20M",
+            "carrier": "WY",
+            "number": "242",
+            "equipment": "738",
+            "id": "s7",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "08:55:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "MCT",
+              "date": "2026-06-29",
+              "time": "10:45:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 230,
+            "duration": "PT1H10M",
+            "carrier": "WY",
+            "number": "609",
+            "equipment": "7M8",
+            "id": "s8",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "location": "MCT",
+              "date": "2026-06-29",
+              "time": "14:30:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "terminal": "1",
+              "location": "DXB",
+              "date": "2026-06-29",
+              "time": "15:40:00"
+            },
+            "AvailabilitySourceCode": "S"
+          },
+          {
+            "@type": "FlightDetail",
+            "distance": 258,
+            "duration": "PT1H15M",
+            "carrier": "AI",
+            "number": "479",
+            "equipment": "321",
+            "id": "s9",
+            "Departure": {
+              "@type": "DepartureDetail",
+              "terminal": "3",
+              "location": "DEL",
+              "date": "2026-06-29",
+              "time": "21:15:00"
+            },
+            "Arrival": {
+              "@type": "ArrivalDetail",
+              "location": "ATQ",
+              "date": "2026-06-29",
+              "time": "22:30:00"
+            },
+            "AvailabilitySourceCode": "S"
+          }
+        ]
+      },
+      {
+        "@type": "ReferenceListProduct",
+        "Product": [
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT7H5M",
+            "id": "p0",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT1H25M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s3"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s4"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "E",
+                    "cabin": "Economy",
+                    "fareBasisCode": "ELN20H6K",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "ERT",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b0"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT7H55M",
+            "id": "p1",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT2H15M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s5"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s6"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "E",
+                    "cabin": "Economy",
+                    "fareBasisCode": "ELN20H6K",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "ERT",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b0"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT28H25M",
+            "id": "p2",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT20H10M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s24"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s25"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "S",
+                    "cabin": "Economy",
+                    "fareBasisCode": "SP8OW1IZ",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "ER",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b1"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT9H45M",
+            "id": "p3",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT2H20M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s11"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s12"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1
+                    ],
+                    "classOfService": "G",
+                    "cabin": "Economy",
+                    "fareBasisCode": "UU3YXYCO",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b2"
+                    }
+                  },
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      2
+                    ],
+                    "classOfService": "U",
+                    "cabin": "Economy",
+                    "fareBasisCode": "UU3YXYCO",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b2"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT9H15M",
+            "id": "p4",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT3H55M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s9"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s10"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "S",
+                    "cabin": "Economy",
+                    "fareBasisCode": "SU3YXYAT",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b2"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT13H30M",
+            "id": "p5",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT8H10M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s18"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s19"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "S",
+                    "cabin": "Economy",
+                    "fareBasisCode": "SU3YXYLK",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b2"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT23H",
+            "id": "p6",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT17H35M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s22"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s23"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "U",
+                    "cabin": "Economy",
+                    "fareBasisCode": "UU3YXYLK",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b2"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT6H55M",
+            "id": "p7",
+            "Quantity": 7,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT2H25M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s1"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s2"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "R",
+                    "cabin": "Economy",
+                    "fareBasisCode": "RCMOIA",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "ER",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b3"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT8H15M",
+            "id": "p8",
+            "Quantity": 7,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT3H45M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s7"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s8"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "R",
+                    "cabin": "Economy",
+                    "fareBasisCode": "RCMOIA",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "ER",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b3"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT19H15M",
+            "id": "p9",
+            "Quantity": 3,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT14H",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s20"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s21"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1
+                    ],
+                    "classOfService": "M",
+                    "cabin": "Economy",
+                    "fareBasisCode": "KU3YXYAT",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b4"
+                    }
+                  },
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      2
+                    ],
+                    "classOfService": "K",
+                    "cabin": "Economy",
+                    "fareBasisCode": "KU3YXYAT",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b4"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT13H",
+            "id": "p10",
+            "Quantity": 9,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT5H40M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s13"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s14"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1
+                    ],
+                    "classOfService": "H",
+                    "cabin": "Economy",
+                    "fareBasisCode": "QU3YXYCO",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b4"
+                    }
+                  },
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      2
+                    ],
+                    "classOfService": "Q",
+                    "cabin": "Economy",
+                    "fareBasisCode": "QU3YXYCO",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "XOX",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b4"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "ProductAir",
+            "totalDuration": "PT13H5M",
+            "id": "p11",
+            "Quantity": 4,
+            "FlightSegment": [
+              {
+                "@type": "FlightSegment",
+                "sequence": 1,
+                "connectionDuration": "PT5H50M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s15"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 2,
+                "connectionDuration": "PT1H5M",
+                "boundFlightsInd": true,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s16"
+                }
+              },
+              {
+                "@type": "FlightSegment",
+                "sequence": 3,
+                "Flight": {
+                  "@type": "FlightID",
+                  "FlightRef": "s17"
+                }
+              }
+            ],
+            "PassengerFlight": [
+              {
+                "@type": "PassengerFlight",
+                "passengerQuantity": 1,
+                "passengerTypeCode": "ADT",
+                "FlightProduct": [
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      1,
+                      2
+                    ],
+                    "classOfService": "Y",
+                    "cabin": "Economy",
+                    "fareBasisCode": "YNN00FEY",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "EU",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b5"
+                    }
+                  },
+                  {
+                    "@type": "FlightProduct",
+                    "segmentSequence": [
+                      3
+                    ],
+                    "classOfService": "S",
+                    "cabin": "Economy",
+                    "fareBasisCode": "YNN00FEY",
+                    "fareType": "PublicFare",
+                    "fareTypeCode": "EU",
+                    "Brand": {
+                      "@type": "BrandID",
+                      "BrandRef": "b5"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ReferenceListBrand",
+        "Brand": [
+          {
+            "@type": "Brand",
+            "name": "Comfort",
+            "tier": 1,
+            "shelfNumbers": [],
+            "code": "Comfort",
+            "id": "b2",
+            "Identifier": {
+              "value": "1402214"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "WiFi",
+                "inclusion": "Not Offered",
+                "groupCode": "IE",
+                "subGroupCode": "IT"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Chargeable",
+                "groupCode": "BF",
+                "subGroupCode": "RF"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Chargeable",
+                "groupCode": "RO",
+                "subGroupCode": "31"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Included",
+                "groupCode": "SA"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "SY",
+                "Classification": "Priority Security",
+                "Inclusion": "Not Offered"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "IE",
+                "Classification": "In Flight Entertainment",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "Classification": "Lounge Access",
+                "Inclusion": "Not Offered"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "UP",
+                "Classification": "Upgrade",
+                "Inclusion": "Included"
+              }
+            ],
+            "ImageURL": [
+              "https://cdn.travelport.com/airindia/AI_general_large_42653.jpg"
+            ]
+          },
+          {
+            "@type": "Brand",
+            "name": "Economy Comfort",
+            "tier": 1,
+            "shelfNumbers": [],
+            "code": "ECOCOMFORT",
+            "id": "b3",
+            "Identifier": {
+              "value": "2070937"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Chargeable",
+                "groupCode": "BF",
+                "subGroupCode": "RF",
+                "subCode": "056"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Not Offered",
+                "groupCode": "BF",
+                "subGroupCode": "SE",
+                "subCode": "05Z"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Chargeable",
+                "groupCode": "BF",
+                "subGroupCode": "VC",
+                "subCode": "055"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML",
+                "subCode": "0B3"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY",
+                "subCode": "0MJ"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "PO",
+                "subCode": "03P",
+                "Classification": "Priority CheckIn",
+                "Inclusion": "Chargeable"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "BF",
+                "subGroupCode": "FR",
+                "subCode": "06A",
+                "Classification": "Mileage Accrual",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "subCode": "0BX",
+                "Classification": "Lounge Access",
+                "Inclusion": "Chargeable"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "SY",
+                "subCode": "0LW",
+                "Classification": "Priority Security",
+                "Inclusion": "Chargeable"
+              }
+            ]
+          },
+          {
+            "@type": "Brand",
+            "name": "Comfort Plus",
+            "tier": 2,
+            "shelfNumbers": [],
+            "code": "Comfortpls",
+            "id": "b4",
+            "Identifier": {
+              "value": "1402218"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "WiFi",
+                "inclusion": "Not Offered",
+                "groupCode": "IE",
+                "subGroupCode": "IT"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Chargeable",
+                "groupCode": "BF",
+                "subGroupCode": "RF"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Chargeable",
+                "groupCode": "RO",
+                "subGroupCode": "31"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Included",
+                "groupCode": "SA"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "SY",
+                "Classification": "Priority Security",
+                "Inclusion": "Not Offered"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "IE",
+                "Classification": "In Flight Entertainment",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "Classification": "Lounge Access",
+                "Inclusion": "Not Offered"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "UP",
+                "Classification": "Upgrade",
+                "Inclusion": "Included"
+              }
+            ],
+            "ImageURL": [
+              "https://cdn.travelport.com/airindia/AI_general_large_42653.jpg"
+            ]
+          },
+          {
+            "@type": "Brand",
+            "name": "Economy Deluxe",
+            "tier": 11,
+            "shelfNumbers": [],
+            "code": "YDELUXE",
+            "id": "b5",
+            "Identifier": {
+              "value": "2083484"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subGroupCode": "VC",
+                "subCode": "059"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML",
+                "subCode": "0B3"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY",
+                "subCode": "010"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subGroupCode": "RF",
+                "subCode": "056"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "CheckedBag",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subCode": "P01"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subGroupCode": "SE",
+                "subCode": "05Z"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "PO",
+                "subCode": "03P",
+                "Classification": "Priority CheckIn",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "subCode": "0BX",
+                "Classification": "Lounge Access",
+                "Inclusion": "Chargeable"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "BF",
+                "subGroupCode": "FR",
+                "subCode": "06R",
+                "Classification": "Mileage Accrual",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "BF",
+                "subGroupCode": "UE",
+                "subCode": "058",
+                "Classification": "Upgrade",
+                "Inclusion": "Chargeable"
+              }
+            ],
+            "ImageURL": [
+              "https://cdn.travelport.com/etihad/EY_general_small_637394.jpg"
+            ]
+          },
+          {
+            "@type": "Brand",
+            "name": "Economy Basic",
+            "tier": 8,
+            "shelfNumbers": [],
+            "code": "YBASIC",
+            "id": "b0",
+            "Identifier": {
+              "value": "2083487"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Not Offered",
+                "groupCode": "BF",
+                "subGroupCode": "VC",
+                "subCode": "059"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML",
+                "subCode": "0B3"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY",
+                "subCode": "010"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Not Offered",
+                "groupCode": "TS",
+                "subGroupCode": "NS",
+                "subCode": "0NN"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "CheckedBag",
+                "inclusion": "Not Offered",
+                "groupCode": "BF",
+                "subCode": "P01"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Chargeable",
+                "groupCode": "BF",
+                "subGroupCode": "SE",
+                "subCode": "05Z"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "PO",
+                "subCode": "03P",
+                "Classification": "Priority CheckIn",
+                "Inclusion": "Chargeable"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "subCode": "0BX",
+                "Classification": "Lounge Access",
+                "Inclusion": "Chargeable"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "BF",
+                "subGroupCode": "FR",
+                "subCode": "09C",
+                "Classification": "Mileage Accrual",
+                "Inclusion": "Included"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "UP",
+                "subCode": "UYC",
+                "Classification": "Upgrade",
+                "Inclusion": "Not Offered"
+              }
+            ],
+            "ImageURL": [
+              "https://cdn.travelport.com/etihad/EY_general_small_637393.png"
+            ]
+          },
+          {
+            "@type": "Brand",
+            "name": "Econ Promo Flex",
+            "tier": 2,
+            "shelfNumbers": [],
+            "code": "Econ Promo",
+            "id": "b1",
+            "Identifier": {
+              "value": "1308421"
+            },
+            "BrandAttribute": [
+              {
+                "@type": "BrandAttribute",
+                "classification": "CarryOn",
+                "inclusion": "Included",
+                "groupCode": "BG",
+                "subGroupCode": "CY"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Refund",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subGroupCode": "RF"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Rebooking",
+                "inclusion": "Included",
+                "groupCode": "BF",
+                "subGroupCode": "VC"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "SeatAssignment",
+                "inclusion": "Chargeable",
+                "groupCode": "SA"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "WiFi",
+                "inclusion": "Chargeable",
+                "groupCode": "IE",
+                "subGroupCode": "IT"
+              },
+              {
+                "@type": "BrandAttribute",
+                "classification": "Meals",
+                "inclusion": "Included",
+                "groupCode": "ML"
+              }
+            ],
+            "AdditionalBrandAttribute": [
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "TS",
+                "subGroupCode": "CI",
+                "Classification": "Priority CheckIn",
+                "Inclusion": "Not Offered"
+              },
+              {
+                "@type": "AdditionalBrandAttribute",
+                "groupCode": "LG",
+                "Classification": "Lounge Access",
+                "Inclusion": "Not Offered"
+              }
+            ],
+            "ImageURL": [
+              "https://cdn.travelport.com/srilankanairlines/UL_general_small_537349.jpg"
+            ]
+          }
+        ]
+      },
+      {
+        "@type": "ReferenceListTermsAndConditions",
+        "TermsAndConditions": [
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T0",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/EY",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "EY",
+                "ProductRef": [
+                  "p0",
+                  "p1"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "No",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 0
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "EY",
+                "ProductRef": [
+                  "p0",
+                  "p1"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "quantity": 1,
+                    "includedInOfferPrice": "Yes",
+                    "soldByPieceInd": true,
+                    "BaggageFee": {
+                      "code": "INR",
+                      "approximateInd": true,
+                      "value": 0
+                    },
+                    "Text": "UPTO15LB/7KG AND UPTO45LI/115LCM"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ],
+                "Text": [
+                  "1P"
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "EY"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyPercent",
+                        "Percent": 100
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyPercent",
+                        "Percent": 100
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T1",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/UL",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "UL",
+                "ProductRef": [
+                  "p2"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "UL",
+                "ProductRef": [
+                  "p2"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "quantity": 1,
+                    "includedInOfferPrice": "Yes",
+                    "soldByPieceInd": true,
+                    "BaggageFee": {
+                      "code": "INR",
+                      "approximateInd": true,
+                      "value": 0
+                    },
+                    "Text": "UPTO15LB/7KG AND UPTO45LI/115LCM"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ],
+                "Text": [
+                  "1P"
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "UL"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 5500
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 7500
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T2",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p3"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p3"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T3",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p4"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p4"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T4",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p5"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p5"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T5",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p6"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p6"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T6",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/WY",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "WY",
+                "ProductRef": [
+                  "p7",
+                  "p8"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 30
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "WY",
+                "ProductRef": [
+                  "p7",
+                  "p8"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "WY"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4370
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 15280
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T7",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p9"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p9"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T8",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/AI",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p10"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 25
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "AI",
+                "ProductRef": [
+                  "p10"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "AI"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 4000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "code": "INR",
+                          "minorUnit": 0,
+                          "value": 8000
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          },
+          {
+            "@type": "TermsAndConditionsAir",
+            "id": "T9",
+            "BaggageAllowance": [
+              {
+                "@type": "BaggageAllowanceDetail",
+                "url": "http://VIEWTRIP.TRAVELPORT.COM/BAGGAGEPOLICY/EY",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "FirstCheckedBag",
+                "validatingAirlineCode": "EY",
+                "ProductRef": [
+                  "p11"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 40
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "EY",
+                "ProductRef": [
+                  "p11"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "quantity": 1,
+                    "includedInOfferPrice": "Yes",
+                    "soldByPieceInd": true,
+                    "BaggageFee": {
+                      "code": "INR",
+                      "approximateInd": true,
+                      "value": 0
+                    },
+                    "Text": "UPTO15LB/7KG AND UPTO45LI/115LCM"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  1
+                ],
+                "Text": [
+                  "1P"
+                ]
+              },
+              {
+                "@type": "BaggageAllowanceDetail",
+                "passengerTypeCodes": [
+                  "ADT"
+                ],
+                "baggageType": "CarryOn",
+                "validatingAirlineCode": "GF",
+                "ProductRef": [
+                  "p11"
+                ],
+                "BaggageItem": [
+                  {
+                    "@type": "BaggageItem",
+                    "includedInOfferPrice": "Yes",
+                    "soldByWeightInd": true,
+                    "Measurement": [
+                      {
+                        "measurementType": "Weight",
+                        "unit": "Kilograms",
+                        "value": 7
+                      }
+                    ],
+                    "Text": "CHGS MAY APPLY IF BAGS EXCEED TTL WT ALLOWANCE"
+                  }
+                ],
+                "SegmentSequenceList": [
+                  2,
+                  3
+                ]
+              }
+            ],
+            "ValidatingAirline": [
+              {
+                "@type": "ValidatingAirline",
+                "ValidatingAirline": "EY"
+              }
+            ],
+            "PaymentTimeLimit": "2026-06-29T23:59:00Z",
+            "Penalties": [
+              {
+                "@type": "Penalties",
+                "Change": [
+                  {
+                    "@type": "ChangePermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "value": 0
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "Cancel": [
+                  {
+                    "@type": "CancelPermitted",
+                    "penaltyTypes": [
+                      "Anytime"
+                    ],
+                    "PenaltyAppliesTo": "PerTicket",
+                    "Penalty": [
+                      {
+                        "@type": "PenaltyAmount",
+                        "Amount": {
+                          "value": 0
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "PassengerTypeCodes": [
+                  "ADT"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

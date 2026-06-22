@@ -10,6 +10,7 @@ const AirIndiaExpressAdapter = require("../providers/AirIndiaExpressAdapter");
 const SpiceJetAdapter = require("../providers/SpiceJetAdapter");
 const FlightRoutes24Adapter = require("../providers/FlightRoutes24Adapter");
 const AkasaAirAdapter = require("../providers/AkasaAirAdapter");
+const TravelportAdapter = require("../providers/TravelportAdapter");
 const { createRedisClient, getQueueRedisConfig } = require("../config/redis");
 const { emailQueue } = require("../jobs/emailJob");
 const PaymentService = require("./PaymentService");
@@ -24,7 +25,8 @@ const adaptersByName = {
   airindia: new AirIndiaExpressAdapter(),
   spicejet: new SpiceJetAdapter(),
   flightroutes24: new FlightRoutes24Adapter(),
-  akasaair: new AkasaAirAdapter()
+  akasaair: new AkasaAirAdapter(),
+  travelport: new TravelportAdapter(),
 };
 
 class BookingService {
@@ -278,6 +280,27 @@ class BookingService {
       }
     }
 
+    if (provider === "travelport") {
+      try {
+        const contentSource = providerMeta.contentSource || "GDS";
+        const adapter = this.getAdapter("travelport");
+        const result = await adapter.priceAndInitiate(providerMeta, contentSource);
+        return {
+          priceOfferMeta: result.priceOfferMeta,
+          contentSource,
+          fareBreakdown: {
+            ...fareBreakdown,
+            baseFare:  result.fareBreakdown.baseFare  || fareBreakdown.baseFare,
+            taxes:     result.fareBreakdown.taxes     || fareBreakdown.taxes,
+            totalFare: result.fareBreakdown.totalFare || fareBreakdown.totalFare,
+            currency:  result.fareBreakdown.currency  || fareBreakdown.currency,
+          },
+        };
+      } catch (err) {
+        console.warn(`[BookingService] Travelport provider initiation failed, using calculated fare: ${err.message}`);
+      }
+    }
+
     // akasaair and flightroutes24, or any provider whose live call failed above
     return { fareBreakdown };
   }
@@ -291,6 +314,7 @@ class BookingService {
     ancillaries = {},
     seatPreferences = [],
     flightDetails = {},
+    returnFlightDetails = null,
     providerMeta = {},
     fareConfig = {},
     fareIntent = "leisure"
@@ -366,6 +390,20 @@ class BookingService {
         stopCount: flightDetails.stopCount || 0,
         aircraft: flightDetails.aircraft || null
       },
+      ...(returnFlightDetails ? {
+        returnFlightDetails: {
+          provider:    returnFlightDetails.provider || provider,
+          flightNo:    returnFlightDetails.flightNo,
+          origin:      returnFlightDetails.origin,
+          destination: returnFlightDetails.destination,
+          departureAt: returnFlightDetails.departureAt,
+          arrivalAt:   returnFlightDetails.arrivalAt,
+          cabinClass:  returnFlightDetails.cabinClass || "economy",
+          fareFamily:  returnFlightDetails.fareFamily || "",
+          fareBasis:   returnFlightDetails.fareBasis  || "",
+          stopCount:   returnFlightDetails.stopCount  || 0,
+        }
+      } : {}),
       passengers: normalizedPassengers,
       ancillaries: normalizedAncillaries,
       fareBreakdown,
@@ -403,6 +441,9 @@ class BookingService {
         hostToken: providerInit.hostToken || null,
         pricingSolution: providerInit.pricingSolution || null,
         optionalServices: providerInit.optionalServices || [],
+        // Travelport REST fields
+        priceOfferMeta: providerInit.priceOfferMeta || null,
+        contentSource: providerInit.contentSource || null,
         fareBreakdown: booking.fareBreakdown
       }
     };
@@ -417,6 +458,9 @@ class BookingService {
         hostToken: providerInit.hostToken || null,
         pricingSolution: providerInit.pricingSolution || null,
         optionalServices: providerInit.optionalServices || [],
+        // Travelport REST fields
+        priceOfferMeta: providerInit.priceOfferMeta || null,
+        contentSource: providerInit.contentSource || null,
         fareBreakdown: booking.fareBreakdown
       });
     } catch (redisErr) {
@@ -545,6 +589,25 @@ class BookingService {
           seatPreferences: (booking.ancillaries || []).filter((item) => item.type === "seat").map((item) => ({ passengerKey: item.passengerId || "PAX1", seatCode: item.description || item.code || "10A", segmentKey: item.segmentRef || "" }))
         });
         if (providerResponse.error) throw new Error(providerResponse.error);
+      } else if (provider === "travelport") {
+        const priceOfferMeta = sessionState.priceOfferMeta || booking.providerMeta?.sessionCache?.priceOfferMeta;
+        const contentSource  = sessionState.contentSource  || booking.providerMeta?.sessionCache?.contentSource || "GDS";
+        if (!priceOfferMeta) {
+          throw new Error("Travelport: priceOfferMeta missing in session — re-initiate booking");
+        }
+        providerResponse = await adapter.confirmBooking({
+          passengers: booking.passengers,
+          priceOfferMeta,
+          contentSource,
+        });
+        // Persist the Travelport reservation identifier for later cancel/exchange/ticketing
+        if (providerResponse.reservationIdentifier) {
+          booking.providerMeta = {
+            ...booking.providerMeta,
+            reservationIdentifier: providerResponse.reservationIdentifier,
+            workbenchId: providerResponse.workbenchId,
+          };
+        }
       } else {
         providerResponse = await adapter.createBooking({ bookingId: booking._id.toString() });
       }
@@ -566,6 +629,18 @@ class BookingService {
       ...booking.pnrMap,
       [provider]: pnr
     };
+    // Persist Travelport reservation identifier for cancel / exchange / ticketing lookups
+    if (provider === "travelport" && providerResponse?.reservationIdentifier) {
+      booking.providerMeta = {
+        ...booking.providerMeta,
+        reservationIdentifier: providerResponse.reservationIdentifier,
+        workbenchId: providerResponse.workbenchId,
+      };
+    }
+    // Persist any ticket numbers returned by the provider at booking time
+    if (Array.isArray(providerResponse?.tickets) && providerResponse.tickets.length) {
+      booking.tickets = providerResponse.tickets;
+    }
     await booking.save();
 
     // Side-effects: fire-and-forget — never let them abort the confirmation response

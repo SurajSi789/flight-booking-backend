@@ -52,6 +52,20 @@ const ancillarySchema = new mongoose.Schema(
   { _id: false }
 );
 
+const ticketSchema = new mongoose.Schema(
+  {
+    /** Airline ticket number (e.g. "6E-1234567890"). */
+    number: { type: String, trim: true },
+    /** Passenger reference within the PNR. */
+    passengerRef: { type: String, trim: true },
+    /** Ticket lifecycle status. */
+    status: { type: String, enum: ["issued", "void", "refunded", "exchanged"], default: "issued" },
+    /** When the ticket was issued. */
+    issuedAt: { type: Date, default: Date.now }
+  },
+  { _id: false }
+);
+
 const BookingSchema = new mongoose.Schema(
   {
     /** Booking reference identifier. */
@@ -63,7 +77,7 @@ const BookingSchema = new mongoose.Schema(
       /** Flight provider source. */
       provider: {
         type: String,
-        enum: ["indigo", "airindia", "spicejet", "akasaair", "akasa", "flightroutes24"],
+        enum: ["indigo", "airindia", "spicejet", "akasaair", "akasa", "flightroutes24", "travelport"],
         required: true
       },
       /** Flight number. */
@@ -100,6 +114,19 @@ const BookingSchema = new mongoose.Schema(
         ],
         default: []
       }
+    },
+    /** Return leg details for round-trip bookings (absent for one-way). */
+    returnFlightDetails: {
+      provider:    { type: String, trim: true },
+      flightNo:    { type: String, trim: true },
+      origin:      { type: String, trim: true },
+      destination: { type: String, trim: true },
+      departureAt: { type: Date },
+      arrivalAt:   { type: Date },
+      cabinClass:  { type: String, trim: true },
+      fareFamily:  { type: String, trim: true },
+      fareBasis:   { type: String, trim: true },
+      stopCount:   { type: Number, min: 0, default: 0 },
     },
     /** Passenger list for this booking. */
     passengers: { type: [passengerSchema], default: [] },
@@ -147,8 +174,11 @@ const BookingSchema = new mongoose.Schema(
       spicejet:      { type: String, trim: true },
       akasaair:      { type: String, trim: true },
       akasa:         { type: String, trim: true },
-      flightroutes24:{ type: String, trim: true }
+      flightroutes24:{ type: String, trim: true },
+      travelport:    { type: String, trim: true }
     },
+    /** Issued ticket numbers (populated after Travelport commit or ticketing step). */
+    tickets: { type: [ticketSchema], default: [] },
     /** Timestamp at which booking was cancelled. */
     cancelledAt: { type: Date },
     /** Cancellation reason string. */
@@ -181,6 +211,7 @@ BookingSchema.index({ userId: 1 });
 BookingSchema.index({ bookingStatus: 1 });
 BookingSchema.index({ paymentStatus: 1 });
 BookingSchema.index({ "flightDetails.departureAt": 1 });
+BookingSchema.index({ "pnrMap.travelport": 1 }, { sparse: true });
 
 BookingSchema.pre("validate", function bookingRefGenerator(next) {
   if (this.bookingRef) {

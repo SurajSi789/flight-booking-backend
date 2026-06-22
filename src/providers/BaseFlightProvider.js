@@ -22,6 +22,7 @@ class BaseFlightProvider {
     return {
       flightId: base.flightId,
       provider: base.provider,
+      carrierCode: base.carrierCode || null,
       flightNo: base.flightNo,
       origin: base.origin,
       destination: base.destination,

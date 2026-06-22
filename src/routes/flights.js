@@ -98,12 +98,18 @@ router.post(
   "/seat-map",
   buildRateLimiter({ windowMs: 30 * 1000, max: 30 }),
   validate([
-    body("airSegment").isObject().withMessage("airSegment must be an object"),
-    body("hostToken").isString().notEmpty().withMessage("hostToken is required"),
     body("provider")
       .optional()
-      .isIn(["indigo", "airindia", "spicejet", "akasa", "akasaair", "flightroutes24"]),
+      .isIn(["indigo", "airindia", "spicejet", "akasa", "akasaair", "flightroutes24", "travelport"])
+      .withMessage("Unknown provider"),
+    // Travelport path uses sessionId/offeringId/productId instead of airSegment/hostToken
+    body("airSegment").optional().isObject(),
+    body("hostToken").optional().isString(),
+    body("sessionId").optional().isString(),
+    body("offeringId").optional().isString(),
+    body("productId").optional().isString(),
     body("travelers").optional().isArray(),
+    body("passengers").optional().isArray(),
   ]),
   asyncHandler(flightController.getSeatMap)
 );

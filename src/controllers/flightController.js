@@ -158,19 +158,33 @@ const getFareRules = async (req, res) => {
 };
 
 const getSeatMap = async (req, res) => {
-  const { provider = "indigo", airSegment, hostToken, hostTokenKey, travelers = [] } = req.body;
+  const { provider = "indigo", airSegment, hostToken, hostTokenKey, travelers = [],
+          sessionId, offeringId, productId, passengers } = req.body;
 
-  if (!airSegment || !hostToken) {
-    return res.status(400).json({ success: false, message: "airSegment and hostToken are required" });
+  let result;
+
+  if (provider === "travelport") {
+    if (!sessionId || !offeringId || !productId) {
+      return res.status(400).json({
+        success: false,
+        message: "sessionId, offeringId, and productId are required for Travelport seat map",
+      });
+    }
+    result = await FlightSearchOrchestrator.getSeatMap({
+      provider,
+      catalogProductOfferingsIdentifier: sessionId,
+      catalogProductOfferingIdentifier: offeringId,
+      productIdentifier: productId,
+      passengers: passengers || [{ id: "traveler_1" }],
+    });
+  } else {
+    if (!airSegment) {
+      return res.status(400).json({ success: false, message: "airSegment is required" });
+    }
+    result = await FlightSearchOrchestrator.getSeatMap({
+      provider, airSegment, hostToken, hostTokenKey, travelers,
+    });
   }
-
-  const result = await FlightSearchOrchestrator.getSeatMap({
-    provider,
-    airSegment,
-    hostToken,
-    hostTokenKey,
-    travelers,
-  });
 
   if (result?.error) {
     return res.status(result.code || 500).json({ success: false, message: result.error });

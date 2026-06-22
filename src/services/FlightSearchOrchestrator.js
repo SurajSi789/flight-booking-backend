@@ -5,6 +5,7 @@ const AirIndiaExpressAdapter = require("../providers/AirIndiaExpressAdapter");
 const SpiceJetAdapter = require("../providers/SpiceJetAdapter");
 const FlightRoutes24Adapter = require("../providers/FlightRoutes24Adapter");
 const AkasaAirAdapter = require("../providers/AkasaAirAdapter");
+const TravelportAdapter = require("../providers/TravelportAdapter");
 
 class FlightSearchOrchestrator {
   constructor() {
@@ -14,7 +15,8 @@ class FlightSearchOrchestrator {
       airindia: new AirIndiaExpressAdapter(),
       spicejet: new SpiceJetAdapter(),
       flightroutes24: new FlightRoutes24Adapter(),
-      akasaair: new AkasaAirAdapter()
+      akasaair: new AkasaAirAdapter(),
+      travelport: new TravelportAdapter(),
     };
   }
 
@@ -22,15 +24,23 @@ class FlightSearchOrchestrator {
     return String(process.env.FR24_ENABLED || "true").toLowerCase() !== "false";
   }
 
+  isTravelportEnabled() {
+    return Boolean(process.env.TRAVELPORT_CLIENT_ID && process.env.TRAVELPORT_USERNAME);
+  }
+
   getAdapters() {
-    const adapters = [
-      { name: "indigo", adapter: this.providers.indigo },
-      { name: "airindia", adapter: this.providers.airindia },
-      { name: "spicejet", adapter: this.providers.spicejet },
-      { name: "akasaair", adapter: this.providers.akasaair }
-    ];
+    const adapters = [];
+    // Direct airline APIs — Indian domestic LCCs (not on Travelport GDS)
+    adapters.push({ name: "indigo",   adapter: this.providers.indigo });
+    adapters.push({ name: "akasaair", adapter: this.providers.akasaair });
+    adapters.push({ name: "spicejet", adapter: this.providers.spicejet });
+    adapters.push({ name: "airindia", adapter: this.providers.airindia });
     if (this.isFr24Enabled()) {
       adapters.push({ name: "flightroutes24", adapter: this.providers.flightroutes24 });
+    }
+    // Travelport GDS — international carriers + Air India/Vistara via GDS
+    if (this.isTravelportEnabled()) {
+      adapters.push({ name: "travelport", adapter: this.providers.travelport });
     }
     return adapters;
   }
@@ -242,15 +252,15 @@ class FlightSearchOrchestrator {
     return response;
   }
 
-  async getSeatMap({ provider = "indigo", airSegment, hostToken, hostTokenKey, travelers = [] }) {
-    const adapter = this.getProvider(provider);
+  async getSeatMap(params) {
+    const adapter = this.getProvider(params.provider || "indigo");
     if (!adapter) {
       return { error: "Unsupported provider", code: 400 };
     }
     if (typeof adapter.getSeatMap !== "function") {
       return { available: false, reason: "Seat selection is not supported for this provider" };
     }
-    return adapter.getSeatMap({ airSegment, hostToken, hostTokenKey, travelers });
+    return adapter.getSeatMap(params);
   }
 
   async getFareRules({ provider }) {

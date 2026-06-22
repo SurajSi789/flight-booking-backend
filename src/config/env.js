@@ -17,6 +17,13 @@ const optional = [
   "AKASA_TEST_URL","AKASA_TEST_USERNAME","AKASA_TEST_PASSWORD","AKASA_TEST_DOMAIN",
   "SG_SOAP_URL","SG_USERNAME","SG_PASSWORD",
   "FR24_CID",
+  // Travelport Trip Services V11 REST
+  "TRAVELPORT_CLIENT_ID","TRAVELPORT_CLIENT_SECRET",
+  "TRAVELPORT_USERNAME","TRAVELPORT_PASSWORD",
+  "TRAVELPORT_ACCESS_GROUP",
+  "TRAVELPORT_BASE_URL","TRAVELPORT_AUTH_URL",
+  "TRAVELPORT_API_VERSION","TRAVELPORT_TIMEOUT_MS",
+  //
   "RAZORPAY_KEY_ID","RAZORPAY_KEY_SECRET","RAZORPAY_WEBHOOK_SECRET",
   "SMTP_HOST","SMTP_USER","SMTP_PASS",
   "OPENAI_API_KEY",
@@ -60,6 +67,17 @@ const env = {
     spiceJet:     { soapUrl: process.env.SG_SOAP_URL || null, username: process.env.SG_USERNAME || null, password: process.env.SG_PASSWORD || null },
     flightRoutes24: { cid: process.env.FR24_CID || null },
     akasaair:     { soapurl: process.env.AKASA_TEST_URL || null, username: process.env.AKASA_TEST_USERNAME || null, password: process.env.AKASA_TEST_PASSWORD || null, domain: process.env.AKASA_TEST_DOMAIN || null },
+    travelport: {
+      clientId:     process.env.TRAVELPORT_CLIENT_ID     || null,
+      clientSecret: process.env.TRAVELPORT_CLIENT_SECRET || null,
+      username:     process.env.TRAVELPORT_USERNAME      || null,
+      password:     process.env.TRAVELPORT_PASSWORD      || null,
+      accessGroup:  process.env.TRAVELPORT_ACCESS_GROUP  || null,
+      baseUrl:      process.env.TRAVELPORT_BASE_URL      || "https://api.pp.travelport.net",
+      authUrl:      process.env.TRAVELPORT_AUTH_URL      || "https://auth.pp.travelport.net/oauth/token",
+      apiVersion:   process.env.TRAVELPORT_API_VERSION   || "11",
+      timeoutMs:    Number(process.env.TRAVELPORT_TIMEOUT_MS || 30000),
+    },
   },
   razorpay: {
     keyId:         process.env.RAZORPAY_KEY_ID     || "rzp_test_mock",
