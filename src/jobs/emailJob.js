@@ -1,11 +1,11 @@
 const Queue = require("bull");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 const Booking = require("../models/Booking");
 const User = require("../models/User");
 const EmailService = require("../services/EmailService");
 const { logger } = require("../config/db");
 
-const emailQueue = new Queue("email-queue", getQueueRedisConfig());
+const emailQueue = new Queue("email-queue", getBullQueueOptions());
 
 emailQueue.process("booking-confirmation", async (job) => {
   const { bookingId } = job.data;

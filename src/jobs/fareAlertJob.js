@@ -1,11 +1,11 @@
 const Queue = require("bull");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 const FareAlert = require("../models/FareAlert");
 const Notification = require("../models/Notification");
 const FlightSearchOrchestrator = require("../services/FlightSearchOrchestrator");
 const { logger } = require("../config/db");
 
-const fareAlertQueue = new Queue("fare-alert-queue", getQueueRedisConfig());
+const fareAlertQueue = new Queue("fare-alert-queue", getBullQueueOptions());
 
 const TWELVE_H_MS = 12 * 60 * 60 * 1000;
 

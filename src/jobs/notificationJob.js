@@ -1,9 +1,9 @@
 const Queue = require("bull");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 const Notification = require("../models/Notification");
 const { logger } = require("../config/db");
 
-const notificationQueue = new Queue("notification-queue", getQueueRedisConfig());
+const notificationQueue = new Queue("notification-queue", getBullQueueOptions());
 
 notificationQueue.process("dispatch", async (job) => {
   const { notificationId } = job.data;

@@ -5,10 +5,10 @@ const Transaction = require("../models/Transaction");
 const BookingService = require("../services/BookingService");
 const PaymentService = require("../services/PaymentService");
 const EmailService = require("../services/EmailService");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 const { env } = require("../config/env");
 
-const webhookQueue = new Queue("payment-webhook-queue", getQueueRedisConfig());
+const webhookQueue = new Queue("payment-webhook-queue", getBullQueueOptions());
 
 webhookQueue.process("process-event", async (job) => {
   const event = job.data.event;

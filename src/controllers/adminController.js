@@ -10,9 +10,9 @@ const AuditLog = require("../models/AuditLog");
 const Transaction = require("../models/Transaction");
 const PaymentService = require("../services/PaymentService");
 const EmailService = require("../services/EmailService");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 
-const notificationQueue = new Queue("notification-queue", getQueueRedisConfig());
+const notificationQueue = new Queue("notification-queue", getBullQueueOptions());
 
 const dayStart = (date = new Date()) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 const monthStart = (date = new Date()) => new Date(date.getFullYear(), date.getMonth(), 1);

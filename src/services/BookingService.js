@@ -11,12 +11,12 @@ const SpiceJetAdapter = require("../providers/SpiceJetAdapter");
 const FlightRoutes24Adapter = require("../providers/FlightRoutes24Adapter");
 const AkasaAirAdapter = require("../providers/AkasaAirAdapter");
 const TravelportAdapter = require("../providers/TravelportAdapter");
-const { createRedisClient, getQueueRedisConfig } = require("../config/redis");
+const { createRedisClient, getBullQueueOptions } = require("../config/redis");
 const { emailQueue } = require("../jobs/emailJob");
 const PaymentService = require("./PaymentService");
 
 const redis = createRedisClient();
-const bookingEmailQueue = emailQueue || new Queue("email-queue", getQueueRedisConfig());
+const bookingEmailQueue = emailQueue || new Queue("email-queue", getBullQueueOptions());
 
 const SESSION_TTL_SECONDS = 900;
 
@@ -315,6 +315,8 @@ class BookingService {
     seatPreferences = [],
     flightDetails = {},
     returnFlightDetails = null,
+    returnFlightBaseFare = 0,
+    returnFlightTaxes = 0,
     providerMeta = {},
     fareConfig = {},
     fareIntent = "leisure"
@@ -429,6 +431,19 @@ class BookingService {
     });
 
     booking.fareBreakdown = providerInit.fareBreakdown || booking.fareBreakdown;
+
+    // For round-trip bookings the provider only prices the outbound leg.
+    // Add the return leg's base fare and taxes that came from the search result.
+    if (returnFlightDetails) {
+      const retBase = Number(returnFlightBaseFare) || 0;
+      const retTax  = Number(returnFlightTaxes)    || 0;
+      if (retBase > 0 || retTax > 0) {
+        booking.fareBreakdown.baseFare  = (booking.fareBreakdown.baseFare  || 0) + retBase;
+        booking.fareBreakdown.taxes     = (booking.fareBreakdown.taxes     || 0) + retTax;
+        booking.fareBreakdown.totalFare = (booking.fareBreakdown.totalFare || 0) + retBase + retTax;
+      }
+    }
+
     booking.sessionStateKey = this.getSessionKey(booking._id);
     // Persist session state on the booking itself as Redis fallback
     booking.providerMeta = {
@@ -751,7 +766,15 @@ class BookingService {
       lastName: booking.passengers?.[0]?.lastName || "NA"
     });
     if (providerCancelRes?.error) {
-      throw new Error(providerCancelRes.error);
+      // Travelport GDS cancellation can fail in sandbox (fake PNR) or when the
+      // session has expired — still cancel the booking locally. Ops can handle
+      // GDS-level cleanup manually. Direct-API providers (IndiGo, SpiceJet etc.)
+      // must block here because their ticket remains active if the API call failed.
+      if (provider === "travelport") {
+        console.warn(`[BookingService] Travelport GDS cancel failed — proceeding with local cancellation: ${providerCancelRes.error}`);
+      } else {
+        throw new Error(providerCancelRes.error);
+      }
     }
 
     await Transaction.create({

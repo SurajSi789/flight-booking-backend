@@ -1,10 +1,10 @@
 const Queue = require("bull");
-const { getQueueRedisConfig } = require("../config/redis");
+const { getBullQueueOptions } = require("../config/redis");
 const Booking = require("../models/Booking");
 const Transaction = require("../models/Transaction");
 const { logger } = require("../config/db");
 
-const refundQueue = new Queue("refund-queue", getQueueRedisConfig());
+const refundQueue = new Queue("refund-queue", getBullQueueOptions());
 
 refundQueue.process("process-refund", async (job) => {
   const { bookingId } = job.data;
