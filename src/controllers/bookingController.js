@@ -1,12 +1,10 @@
-const crypto = require("crypto");
-const PDFDocument = require("pdfkit");
-const QRCode = require("qrcode");
 const Booking = require("../models/Booking");
 const Transaction = require("../models/Transaction");
 const User = require("../models/User");
 const BookingService = require("../services/BookingService");
 const PaymentService = require("../services/PaymentService");
 const EmailService = require("../services/EmailService");
+const { generateTicketPDFBuffer } = require("../utils/ticketPdf");
 const { env } = require("../config/env");
 
 const buildResponse = (res, status, payload) => res.status(status).json(payload);
@@ -262,81 +260,11 @@ const getTicket = async (req, res) => {
     return buildResponse(res, 400, { success: false, message: "Ticket is available only for confirmed bookings" });
   }
 
-  const pnr = booking.pnrMap?.[booking.flightDetails.provider] || booking.bookingRef;
-  const isRoundTrip = !!booking.returnFlightDetails?.origin;
-  const qrDataUrl = await QRCode.toDataURL(`PNR:${pnr}`);
-  const qrBase64 = qrDataUrl.replace(/^data:image\/png;base64,/, "");
-  const qrBuffer = Buffer.from(qrBase64, "base64");
-
-  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  const pdfBuffer = await generateTicketPDFBuffer(booking);
   res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", `attachment; filename="ticket-${booking.bookingRef}.pdf"`);
-  doc.pipe(res);
-
-  const fmt = (d) => d ? new Date(d).toUTCString().replace(" GMT", " UTC") : "N/A";
-
-  // ── Header ────────────────────────────────────────────────────────────────
-  doc.fontSize(20).text("E-Ticket", 40, 50);
-  doc.fontSize(12).text(`Booking Ref: ${booking.bookingRef}`, 40, 80);
-  doc.text(`PNR: ${pnr}`, 40, 96);
-  if (isRoundTrip) doc.text("Trip type: Round Trip", 40, 112);
-  doc.image(qrBuffer, 430, 50, { width: 110 });
-
-  // ── Outbound leg ──────────────────────────────────────────────────────────
-  let y = isRoundTrip ? 148 : 130;
-  doc.moveTo(40, y - 8).lineTo(555, y - 8).stroke("#e5e7eb");
-  doc.fontSize(10).fillColor("#6b7280").text(isRoundTrip ? "OUTBOUND FLIGHT" : "FLIGHT", 40, y);
-  y += 14;
-  doc.fontSize(13).fillColor("#111827")
-    .text(`${booking.flightDetails.origin}  →  ${booking.flightDetails.destination}`, 40, y);
-  y += 18;
-  doc.fontSize(11).fillColor("#374151")
-    .text(`Flight: ${booking.flightDetails.flightNo || "N/A"}`, 40, y)
-    .text(`Departure: ${fmt(booking.flightDetails.departureAt)}`, 40, y + 15)
-    .text(`Arrival:   ${fmt(booking.flightDetails.arrivalAt)}`, 40, y + 30)
-    .text(`Cabin: ${booking.flightDetails.cabinClass || "Economy"}`, 40, y + 45);
-  y += 65;
-
-  // ── Return leg (round-trip only) ──────────────────────────────────────────
-  if (isRoundTrip) {
-    const r = booking.returnFlightDetails;
-    doc.moveTo(40, y).lineTo(555, y).stroke("#e5e7eb");
-    y += 10;
-    doc.fontSize(10).fillColor("#6b7280").text("RETURN FLIGHT", 40, y);
-    y += 14;
-    doc.fontSize(13).fillColor("#111827")
-      .text(`${r.origin}  →  ${r.destination}`, 40, y);
-    y += 18;
-    doc.fontSize(11).fillColor("#374151")
-      .text(`Flight: ${r.flightNo || "N/A"}`, 40, y)
-      .text(`Departure: ${fmt(r.departureAt)}`, 40, y + 15)
-      .text(`Arrival:   ${fmt(r.arrivalAt)}`, 40, y + 30)
-      .text(`Cabin: ${r.cabinClass || "Economy"}`, 40, y + 45);
-    y += 65;
-  }
-
-  // ── Passengers ────────────────────────────────────────────────────────────
-  doc.moveTo(40, y).lineTo(555, y).stroke("#e5e7eb");
-  y += 10;
-  doc.fontSize(10).fillColor("#6b7280").text("PASSENGERS", 40, y);
-  y += 14;
-  doc.fontSize(11).fillColor("#374151");
-  booking.passengers.forEach((pax, idx) => {
-    doc.text(`${idx + 1}. ${pax.firstName} ${pax.lastName}  (${pax.type})${pax.seatNo ? `  · Seat ${pax.seatNo}` : ""}`, 40, y);
-    y += 16;
-  });
-
-  // ── Fare ──────────────────────────────────────────────────────────────────
-  y += 8;
-  doc.moveTo(40, y).lineTo(555, y).stroke("#e5e7eb");
-  y += 10;
-  const fare = booking.fareBreakdown || {};
-  doc.fontSize(10).fillColor("#6b7280").text("FARE SUMMARY", 40, y);
-  y += 14;
-  doc.fontSize(11).fillColor("#374151")
-    .text(`Total Fare: INR ${(fare.totalFare || 0).toLocaleString("en-IN")}`, 40, y);
-
-  doc.end();
+  res.setHeader("Content-Disposition", `attachment; filename="eticket-${booking.bookingRef}.pdf"`);
+  res.setHeader("Content-Length", pdfBuffer.length);
+  res.end(pdfBuffer);
 };
 
 module.exports = {
