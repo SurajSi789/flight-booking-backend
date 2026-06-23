@@ -200,11 +200,15 @@ const cancelBooking = async (req, res) => {
   }
 
   const { reason, useWallet } = req.body;
+
+  // Capture paymentStatus before the service mutates it to "refund_pending"
+  const wasAlreadyPaid = booking.paymentStatus === "paid";
+
   const { refundAmount } = await BookingService.cancelBooking({ booking, reason });
 
   let refundMethod = "none";
   let estimatedDays = 0;
-  if (refundAmount > 0 && booking.paymentStatus === "paid") {
+  if (refundAmount > 0 && wasAlreadyPaid) {
     if (useWallet) {
       const user = await User.findById(booking.userId);
       user.walletBalance += refundAmount;
@@ -226,14 +230,15 @@ const cancelBooking = async (req, res) => {
       refundMethod = "card";
       estimatedDays = 7;
     }
+  }
 
-    const user = await User.findById(booking.userId);
-    if (user) {
-      await Promise.allSettled([
-        EmailService.sendCancellationConfirmation({ to: user.email, booking, refundAmount }),
-        WhatsAppService.sendCancellationConfirmation({ booking, refundAmount }),
-      ]);
-    }
+  // Always notify the customer after cancellation, regardless of refund eligibility
+  const user = await User.findById(booking.userId);
+  if (user) {
+    Promise.allSettled([
+      EmailService.sendCancellationConfirmation({ to: user.email, booking, refundAmount }),
+      WhatsAppService.sendCancellationConfirmation({ booking, refundAmount }),
+    ]).catch(() => {});
   }
 
   return buildResponse(res, 200, {
