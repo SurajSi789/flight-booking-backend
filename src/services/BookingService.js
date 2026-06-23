@@ -13,6 +13,7 @@ const AkasaAirAdapter = require("../providers/AkasaAirAdapter");
 const TravelportAdapter = require("../providers/TravelportAdapter");
 const { createRedisClient, getBullQueueOptions } = require("../config/redis");
 const { emailQueue } = require("../jobs/emailJob");
+const { whatsappQueue } = require("../jobs/whatsappJob");
 const PaymentService = require("./PaymentService");
 
 const redis = createRedisClient();
@@ -665,6 +666,7 @@ class BookingService {
     // Side-effects: fire-and-forget — never let them abort the confirmation response
     Promise.all([
       bookingEmailQueue.add("booking-confirmation", { bookingId: booking._id.toString() }),
+      whatsappQueue.add("booking-confirmation", { bookingId: booking._id.toString(), pnr }),
       NotificationService.queueNotification({
         userId: booking.userId,
         channel: "in_app",

@@ -27,6 +27,7 @@ const optional = [
   "RAZORPAY_KEY_ID","RAZORPAY_KEY_SECRET","RAZORPAY_WEBHOOK_SECRET",
   "SMTP_HOST","SMTP_USER","SMTP_PASS",
   "OPENAI_API_KEY",
+  "MYOPERATOR_API_URL","MYOPERATOR_TOKEN","MYOPERATOR_COMPANY_ID","MYOPERATOR_PHONE_NUMBER_ID",
 ];
 const missingOptional = optional.filter((k) => !process.env[k]);
 if (missingOptional.length && process.env.NODE_ENV !== "production") {
@@ -85,6 +86,14 @@ const env = {
     webhookSecret: process.env.RAZORPAY_WEBHOOK_SECRET || "mock_webhook_secret_skybook",
   },
   openAiApiKey: process.env.OPENAI_API_KEY || null,
+  myoperator: {
+    apiUrl:                  process.env.MYOPERATOR_API_URL                   || "https://publicapi.myoperator.co/chat/messages",
+    token:                   process.env.MYOPERATOR_TOKEN                     || null,
+    companyId:               process.env.MYOPERATOR_COMPANY_ID                || null,
+    phoneNumberId:           process.env.MYOPERATOR_PHONE_NUMBER_ID           || null,
+    bookingTemplateId:       process.env.MYOPERATOR_BOOKING_TEMPLATE_ID       || null,
+    cancellationTemplateId:  process.env.MYOPERATOR_CANCELLATION_TEMPLATE_ID  || null,
+  },
 };
 
 module.exports = { env, requiredEnvVars: coreRequired };

@@ -8,6 +8,7 @@ require("./jobs/emailJob");
 require("./jobs/notificationJob");
 require("./jobs/refundJob");
 require("./jobs/fareAlertJob");
+require("./jobs/whatsappJob");
 
 const server = http.createServer(app);
 

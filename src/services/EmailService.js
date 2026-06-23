@@ -155,7 +155,6 @@ class EmailService {
         <table width="100%" cellpadding="0" cellspacing="0"><tr>
           <td>
             <div style="font-size:20px;font-weight:700;color:#15803d;">✓ Booking Confirmed</div>
-            <div style="font-size:13px;color:#166534;margin-top:4px;">Hi ${userName.first+" "+userName.last || "there"}, your flight booking is confirmed.</div>
           </td>
           <td align="right" style="vertical-align:top;">
             <div style="font-size:11px;color:#64748b;">Booking Ref</div>

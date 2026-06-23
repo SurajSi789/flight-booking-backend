@@ -4,6 +4,7 @@ const User = require("../models/User");
 const BookingService = require("../services/BookingService");
 const PaymentService = require("../services/PaymentService");
 const EmailService = require("../services/EmailService");
+const WhatsAppService = require("../services/WhatsAppService");
 const { generateTicketPDFBuffer } = require("../utils/ticketPdf");
 const { env } = require("../config/env");
 
@@ -228,11 +229,10 @@ const cancelBooking = async (req, res) => {
 
     const user = await User.findById(booking.userId);
     if (user) {
-      await EmailService.sendCancellationConfirmation({
-        to: user.email,
-        booking,
-        refundAmount
-      });
+      await Promise.allSettled([
+        EmailService.sendCancellationConfirmation({ to: user.email, booking, refundAmount }),
+        WhatsAppService.sendCancellationConfirmation({ booking, refundAmount }),
+      ]);
     }
   }
 
