@@ -35,16 +35,20 @@ const shutdown = async (signal) => {
 
 const bootstrap = async () => {
   await connectDB();
-  await connectRedis();
 
-  server.listen(env.port, () => {
-    logger.info("Server started", {
-      port: env.port,
-      environment: env.nodeEnv,
-      mongoState: "connected",
-      redisState: "connected"
+  // Bind the HTTP port first so Render/health-checks see the server immediately.
+  // Redis connects in the background — ioredis retries automatically.
+  await new Promise((resolve, reject) => {
+    server.listen(env.port, () => {
+      logger.info("Server started", { port: env.port, environment: env.nodeEnv });
+      resolve();
     });
+    server.once("error", reject);
   });
+
+  connectRedis().catch((err) =>
+    logger.error("Redis initial connection failed, retrying in background", { error: err.message })
+  );
 };
 
 process.on("SIGINT", () => shutdown("SIGINT"));

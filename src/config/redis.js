@@ -27,7 +27,8 @@ const createRedisClient = () => {
 
 const connectRedis = async () => {
   const client = createRedisClient();
-  if (client.status !== "ready") await client.ping();
+  // Don't await ping — ioredis reconnects automatically in the background.
+  // Blocking here prevents the HTTP server from starting if Redis is slow.
   return client;
 };
 
