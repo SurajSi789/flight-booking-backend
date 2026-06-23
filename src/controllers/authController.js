@@ -91,11 +91,15 @@ const register = async (req, res) => {
   const otp = user.generateOTP(10);
   await user.save();
 
-  await EmailService.sendOTPEmail({
-    to: user.email,
-    otp,
-    name: `${user.name.first} ${user.name.last}`
-  });
+  try {
+    await EmailService.sendOTPEmail({
+      to: user.email,
+      otp,
+      name: `${user.name.first} ${user.name.last}`
+    });
+  } catch (emailErr) {
+    console.warn(`[Auth] OTP email failed for ${user.email}: ${emailErr.message}`);
+  }
 
   return res.status(201).json({
     success: true,
