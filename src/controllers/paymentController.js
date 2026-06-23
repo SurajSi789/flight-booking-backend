@@ -27,7 +27,10 @@ webhookQueue.process("process-event", async (job) => {
 
   if (event === "payment.failed") {
     const paymentEntity = payload?.payment?.entity || {};
-    await PaymentService.markPaymentFailed({ orderId: paymentEntity.order_id, payload: paymentEntity });
+    const transaction = await PaymentService.markPaymentFailed({ orderId: paymentEntity.order_id, payload: paymentEntity });
+    if (transaction) {
+      await releaseBookingWalletHold(transaction.bookingId, "Payment failed via gateway");
+    }
     return;
   }
 
@@ -36,6 +39,49 @@ webhookQueue.process("process-event", async (job) => {
     await PaymentService.markRefundProcessed(refundEntity);
   }
 });
+
+// Restores wallet hold on a booking that was never paid.
+// Safe to call multiple times — idempotent when walletDebit is already 0.
+async function releaseBookingWalletHold(bookingId, reason) {
+  const booking = await Booking.findById(bookingId);
+  const walletDebit = booking?.fareBreakdown?.walletDebit;
+  if (!walletDebit || walletDebit <= 0) return;
+
+  await User.findByIdAndUpdate(booking.userId, {
+    $inc: { walletBalance: walletDebit },
+    $push: {
+      walletTransactions: {
+        amount: walletDebit,
+        type: "credit",
+        reason: reason || `Wallet hold released for booking ${booking.bookingRef || booking._id}`,
+        date: new Date(),
+      },
+    },
+  });
+  await Booking.findByIdAndUpdate(booking._id, {
+    $set: { "fareBreakdown.walletDebit": 0 },
+  });
+}
+
+const releaseWalletHold = async (req, res) => {
+  const { bookingId } = req.body;
+  if (!bookingId) {
+    return res.status(400).json({ success: false, message: "bookingId is required" });
+  }
+
+  const booking = await Booking.findOne({ _id: bookingId, userId: req.user.userId });
+  if (!booking) {
+    return res.status(404).json({ success: false, message: "Booking not found" });
+  }
+  if (booking.paymentStatus === "paid") {
+    return res.status(400).json({ success: false, message: "Booking is already paid" });
+  }
+
+  await releaseBookingWalletHold(booking._id, `Wallet hold released - payment abandoned for ${booking.bookingRef}`);
+  await Booking.findByIdAndUpdate(booking._id, { $set: { paymentStatus: "failed" } });
+
+  return res.json({ success: true, message: "Wallet hold released" });
+};
 
 const createOrder = async (req, res) => {
   const booking = await Booking.findOne({ _id: req.body.bookingId, userId: req.user.userId });
@@ -126,5 +172,6 @@ module.exports = {
   createOrder,
   webhook,
   refund,
-  wallet
+  wallet,
+  releaseWalletHold,
 };

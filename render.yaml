@@ -1,0 +1,119 @@
+services:
+  - type: web
+    name: skybook-backend
+    runtime: node
+    region: singapore
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    envVars:
+      # ── Core ────────────────────────────────────────────────────────────────
+      - key: NODE_ENV
+        value: staging
+      # PORT is set automatically by Render — do NOT override it
+
+      # ── Database & Cache ─────────────────────────────────────────────────────
+      # Set these in the Render dashboard → Environment tab
+      - key: MONGO_URI
+        sync: false   # MongoDB Atlas connection string
+      - key: REDIS_URL
+        sync: false   # Redis Cloud / Upstash URL
+
+      # ── Auth ────────────────────────────────────────────────────────────────
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_ACCESS_EXPIRY
+        value: "900"
+      - key: JWT_REFRESH_EXPIRY
+        value: "604800"
+      - key: JWT_RESET_EXPIRY
+        value: "1800"
+      - key: ADMIN_JWT_SECRET
+        sync: false
+
+      # ── CORS — update to actual Vercel URLs after first deploy ───────────────
+      - key: CORS_WHITELIST
+        value: https://skybook-frontend.vercel.app
+      - key: ADMIN_CORS_ORIGIN
+        value: https://skybook-admin.vercel.app
+
+      # ── App URLs ─────────────────────────────────────────────────────────────
+      - key: APP_BASE_URL
+        value: https://skybook-frontend.vercel.app
+      - key: SUPPORT_EMAIL
+        sync: false
+
+      # ── Travelport ──────────────────────────────────────────────────────────
+      - key: TRAVELPORT_CLIENT_ID
+        sync: false
+      - key: TRAVELPORT_CLIENT_SECRET
+        sync: false
+      - key: TRAVELPORT_USERNAME
+        sync: false
+      - key: TRAVELPORT_PASSWORD
+        sync: false
+      - key: TRAVELPORT_ACCESS_GROUP
+        sync: false
+      - key: TRAVELPORT_BASE_URL
+        value: https://api.pp.travelport.net
+      - key: TRAVELPORT_AUTH_URL
+        value: https://auth.pp.travelport.net/oauth/token
+      - key: TRAVELPORT_API_VERSION
+        value: "11"
+      - key: TRAVELPORT_TIMEOUT_MS
+        value: "30000"
+
+      # ── GDS Providers ────────────────────────────────────────────────────────
+      - key: INDIGO_USERNAME
+        sync: false
+      - key: INDIGO_PASSWORD
+        sync: false
+      - key: INDIGO_TARGET_BRANCH
+        sync: false
+      - key: AKASA_TEST_URL
+        sync: false
+      - key: AKASA_TEST_USERNAME
+        sync: false
+      - key: AKASA_TEST_PASSWORD
+        sync: false
+      - key: AKASA_TEST_DOMAIN
+        sync: false
+
+      # ── Payments ─────────────────────────────────────────────────────────────
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+      # ── Email ────────────────────────────────────────────────────────────────
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SMTP_FROM
+        sync: false
+
+      # ── WhatsApp ─────────────────────────────────────────────────────────────
+      - key: MYOPERATOR_API_URL
+        value: https://publicapi.myoperator-stage.co/chat/messages
+      - key: MYOPERATOR_TOKEN
+        sync: false
+      - key: MYOPERATOR_COMPANY_ID
+        sync: false
+      - key: MYOPERATOR_PHONE_NUMBER_ID
+        sync: false
+      - key: MYOPERATOR_BOOKING_TEMPLATE_ID
+        sync: false
+      - key: MYOPERATOR_CANCELLATION_TEMPLATE_ID
+        sync: false
+
+      # ── OpenAI (optional) ────────────────────────────────────────────────────
+      - key: OPENAI_API_KEY
+        sync: false

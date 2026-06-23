@@ -28,5 +28,11 @@ router.post(
   asyncHandler(paymentController.refund)
 );
 router.get("/wallet", authenticate, asyncHandler(paymentController.wallet));
+router.post(
+  "/release-hold",
+  authenticate,
+  validate([body("bookingId").isMongoId()]),
+  asyncHandler(paymentController.releaseWalletHold)
+);
 
 module.exports = router;
