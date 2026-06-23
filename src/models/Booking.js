@@ -149,6 +149,10 @@ const BookingSchema = new mongoose.Schema(
       /** Booking currency code. */
       currency: { type: String, default: "INR", trim: true }
     },
+    /** Contact email provided at booking time (may differ from account email). */
+    contactEmail: { type: String, trim: true },
+    /** Contact phone provided at booking time. */
+    contactPhone: { type: String, trim: true },
     /** Applied coupon code. */
     couponCode: { type: String, trim: true },
     /** Current payment status. */

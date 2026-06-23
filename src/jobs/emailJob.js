@@ -17,15 +17,29 @@ emailQueue.process("booking-confirmation", async (job) => {
   if (!user) throw new Error("User not found for email dispatch");
 
   const pnr = booking.pnrMap?.[booking.flightDetails.provider] || null;
+  const userName = user.name || user.firstName || user.email;
   const pdfBuffer = await generateTicketPDFBuffer(booking);
 
+  // Always send to the registered account email
   await EmailService.sendBookingConfirmation({
     to: user.email,
     booking,
     pnr,
-    userName: user.name || user.firstName || user.email,
-    pdfBuffer
+    userName,
+    pdfBuffer,
   });
+
+  // Also send to the contact email provided at booking time, if it differs from the account email
+  const contactEmail = booking.contactEmail;
+  if (contactEmail && contactEmail.toLowerCase() !== user.email.toLowerCase()) {
+    await EmailService.sendBookingConfirmation({
+      to: contactEmail,
+      booking,
+      pnr,
+      userName,
+      pdfBuffer,
+    });
+  }
 });
 
 emailQueue.on("failed", (job, error) => {
