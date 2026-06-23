@@ -42,7 +42,12 @@ class EmailService {
       console.warn(`[EmailService] SMTP not configured — skipping email to ${to}: ${subject}`);
       return null;
     }
-    return this.transport.sendMail({ from: env.smtp.from, to, subject, html, attachments });
+    try {
+      return await this.transport.sendMail({ from: env.smtp.from, to, subject, html, attachments });
+    } catch (err) {
+      console.warn(`[EmailService] Failed to send "${subject}" to ${to}: ${err.message}`);
+      return null;
+    }
   }
 
   // ── Base layout wrapper ──────────────────────────────────────────────────

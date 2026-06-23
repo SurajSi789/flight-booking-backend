@@ -91,27 +91,21 @@ const register = async (req, res) => {
   const otp = user.generateOTP(10);
   await user.save();
 
-  let emailSent = false;
-  try {
-    await EmailService.sendOTPEmail({
-      to: user.email,
-      otp,
-      name: `${user.name.first} ${user.name.last}`
-    });
-    emailSent = true;
-  } catch (emailErr) {
-    console.warn(`[Auth] OTP email failed for ${user.email}: ${emailErr.message}`);
-    // In staging, auto-verify so users aren't stuck without a working SMTP server
-    if (process.env.NODE_ENV !== "production") {
-      user.isVerified = true;
-      await user.save();
-      console.info(`[Auth] Staging: auto-verified ${user.email} because SMTP is unavailable`);
-    }
+  await EmailService.sendOTPEmail({
+    to: user.email,
+    otp,
+    name: `${user.name.first} ${user.name.last}`
+  });
+
+  // In staging, auto-verify so users aren't stuck without a working SMTP server
+  if (process.env.NODE_ENV !== "production") {
+    user.isVerified = true;
+    await user.save();
   }
 
   return res.status(201).json({
     success: true,
-    message: emailSent ? "OTP sent to email" : "Account created — email unavailable, you can log in directly",
+    message: "OTP sent to email",
     data: { userId: user._id }
   });
 };
