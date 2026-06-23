@@ -1,3 +1,7 @@
+// Bull creates one Redis bclient per queue, each adding error listeners to ioredis's
+// internal Commander emitter. 5 queues exceeds Node's default limit of 10.
+require("events").EventEmitter.defaultMaxListeners = 25;
+
 const http = require("http");
 const app = require("./app");
 const { env } = require("./config/env");
