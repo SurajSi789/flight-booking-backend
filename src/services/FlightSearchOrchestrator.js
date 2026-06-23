@@ -25,7 +25,10 @@ class FlightSearchOrchestrator {
   }
 
   isTravelportEnabled() {
-    return Boolean(process.env.TRAVELPORT_CLIENT_ID && process.env.TRAVELPORT_USERNAME);
+    const clientId = process.env.TRAVELPORT_CLIENT_ID;
+    const username = process.env.TRAVELPORT_USERNAME;
+    console.info(`[Travelport] enabled check — CLIENT_ID=${clientId ? `set(${clientId.length}chars)` : "MISSING"} USERNAME=${username ? `set(${username.length}chars)` : "MISSING"}`);
+    return Boolean(clientId && username);
   }
 
   getAdapters() {
