@@ -96,7 +96,7 @@ app.use("/api/v1/flights", flightRoutes);
 app.use("/api/v1/bookings", bookingRoutes);
 app.use("/api/v1/payments", paymentRoutes);
 app.use("/api/v1/coupons", couponRoutes);
-app.use("/api/v1", catalogRoutes);
+app.use("/api/v1/catalog", catalogRoutes);
 app.use("/api/v1/users", userRoutes);
 // Admin auth (login/logout/MFA) mounted first — these routes are public (no token required for /login)
 app.use("/api/v1/admin/auth", adminAuthRoutes);
