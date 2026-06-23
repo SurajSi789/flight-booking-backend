@@ -26,6 +26,10 @@ const fareAlertRoutes = require("./routes/fareAlerts");
 
 const app = express();
 
+// Trust Render's reverse proxy so express-rate-limit can read the real client IP
+// from X-Forwarded-For instead of seeing the internal proxy address.
+app.set("trust proxy", 1);
+
 const morganLogger = winston.createLogger({
   level: "info",
   format: winston.format.combine(winston.format.timestamp(), winston.format.json()),

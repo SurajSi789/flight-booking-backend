@@ -54,6 +54,18 @@ const bootstrap = async () => {
 process.on("SIGINT", () => shutdown("SIGINT"));
 process.on("SIGTERM", () => shutdown("SIGTERM"));
 
+// ioredis throws MaxRetriesPerRequestError as an uncaught exception when a
+// Bull bclient drops while commands are queued. Catch it so the process
+// doesn't crash — ioredis reconnects automatically.
+process.on("uncaughtException", (err) => {
+  if (err.name === "MaxRetriesPerRequestError") {
+    logger.warn("Redis command timed out during reconnect, will retry", { error: err.message });
+    return;
+  }
+  logger.error("Uncaught exception", { error: err.message, stack: err.stack });
+  process.exit(1);
+});
+
 bootstrap().catch((error) => {
   logger.error("Startup failed", { error: error.message, stack: error.stack });
   process.exit(1);
