@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 const { env } = require("../config/env");
 
 const IST = "Asia/Kolkata";
@@ -25,27 +26,51 @@ function paxTypeLabel(t) {
 
 class EmailService {
   constructor() {
-    if (!env.smtp.host) {
-      this.transport = null;
-      return;
+    this.brevoApiKey = process.env.BREVO_API_KEY || null;
+
+    // Fall back to nodemailer SMTP only for local dev (no BREVO_API_KEY set)
+    if (!this.brevoApiKey) {
+      this.transport = env.smtp.host
+        ? nodemailer.createTransport({
+            host: env.smtp.host,
+            port: Number(process.env.SMTP_PORT || 587),
+            secure: process.env.SMTP_SECURE === "true",
+            auth: { user: env.smtp.user, pass: env.smtp.pass }
+          })
+        : null;
     }
-    this.transport = nodemailer.createTransport({
-      host: env.smtp.host,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: { user: env.smtp.user, pass: env.smtp.pass }
-    });
   }
 
   async send({ to, subject, html, attachments = [] }) {
+    // ── Brevo HTTP API (used on Render — bypasses SMTP port blocking) ─────────
+    if (this.brevoApiKey) {
+      try {
+        await axios.post(
+          "https://api.brevo.com/v3/smtp/email",
+          {
+            sender: { email: env.smtp.from?.match(/<(.+)>/)?.[1] || env.smtp.user, name: "SkyBook" },
+            to: [{ email: to }],
+            subject,
+            htmlContent: html,
+          },
+          { headers: { "api-key": this.brevoApiKey, "Content-Type": "application/json" } }
+        );
+        return true;
+      } catch (err) {
+        console.warn(`[EmailService] Brevo API failed "${subject}" to ${to}: ${err.response?.data?.message || err.message}`);
+        return null;
+      }
+    }
+
+    // ── Nodemailer SMTP fallback (local dev) ──────────────────────────────────
     if (!this.transport) {
-      console.warn(`[EmailService] SMTP not configured — skipping email to ${to}: ${subject}`);
+      console.warn(`[EmailService] No email transport configured — skipping "${subject}" to ${to}`);
       return null;
     }
     try {
       return await this.transport.sendMail({ from: env.smtp.from, to, subject, html, attachments });
     } catch (err) {
-      console.warn(`[EmailService] Failed to send "${subject}" to ${to}: ${err.message}`);
+      console.warn(`[EmailService] SMTP failed "${subject}" to ${to}: ${err.message}`);
       return null;
     }
   }
