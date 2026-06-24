@@ -1,14 +1,12 @@
 const { v4: uuidv4 } = require("uuid");
-const OpenAI = require("openai");
-const Anthrophic = require("@anthropic-ai/sdk");
+const Anthropic = require("@anthropic-ai/sdk");
 const ChatSession = require("../models/ChatSession");
 const Booking = require("../models/Booking");
 const CouponService = require("./CouponService");
 const FlightSearchOrchestrator = require("./FlightSearchOrchestrator");
 const EmailService = require("./EmailService");
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const anthropic = new Anthrophic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT =
   "You are a helpful flight booking assistant. You help users:\n- Search for flights between cities\n- Check existing booking status and details\n- Understand cancellation policies and refund status\n- Apply coupons and understand discounts\n- Get information about baggage policies, check-in, and seat selection\n- Resolve booking issues\n\nBe concise, friendly, and always confirm before taking any action.\nWhen searching flights, always confirm the route and date before searching.\nIf you cannot help with something, say so clearly and offer to escalate.\nNever share another user's booking information.";
@@ -37,103 +35,94 @@ const FAQ_MAP = {
 
 const TOOL_DEFINITIONS = [
   {
-    type: "function",
-    function: {
-      name: "search_flights",
-      parameters: {
-        type: "object",
-        properties: {
-          origin: { type: "string", description: "Origin IATA code" },
-          destination: { type: "string", description: "Destination IATA code" },
-          date: { type: "string", description: "Departure date YYYY-MM-DD" },
-          returnDate: { type: "string" },
-          adults: { type: "integer", default: 1 },
-          children: { type: "integer", default: 0 },
-          cabin: { type: "string", enum: ["economy"], default: "economy" }
-        },
-        required: ["origin", "destination", "date"]
-      }
+    name: "search_flights",
+    description: "Search for available flights between two cities on a given date",
+    input_schema: {
+      type: "object",
+      properties: {
+        origin: { type: "string", description: "Origin IATA code" },
+        destination: { type: "string", description: "Destination IATA code" },
+        date: { type: "string", description: "Departure date YYYY-MM-DD" },
+        returnDate: { type: "string", description: "Return date YYYY-MM-DD for round trips" },
+        adults: { type: "integer", description: "Number of adult passengers" },
+        children: { type: "integer", description: "Number of child passengers" },
+        cabin: { type: "string", enum: ["economy"], description: "Cabin class" }
+      },
+      required: ["origin", "destination", "date"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "get_booking_status",
-      parameters: {
-        type: "object",
-        properties: {
-          bookingRef: { type: "string" },
-          lastName: { type: "string" }
-        },
-        required: ["bookingRef"]
-      }
+    name: "get_booking_status",
+    description: "Retrieve the status and details of an existing booking",
+    input_schema: {
+      type: "object",
+      properties: {
+        bookingRef: { type: "string", description: "Booking reference number" },
+        lastName: { type: "string", description: "Passenger last name for guest verification" }
+      },
+      required: ["bookingRef"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "get_refund_status",
-      parameters: {
-        type: "object",
-        properties: { bookingRef: { type: "string" } },
-        required: ["bookingRef"]
-      }
+    name: "get_refund_status",
+    description: "Check the refund status and estimated credit date for a cancelled booking",
+    input_schema: {
+      type: "object",
+      properties: {
+        bookingRef: { type: "string", description: "Booking reference number" }
+      },
+      required: ["bookingRef"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "validate_coupon",
-      parameters: {
-        type: "object",
-        properties: {
-          code: { type: "string" },
-          totalFare: { type: "number" },
-          provider: { type: "string" }
-        },
-        required: ["code", "totalFare"]
-      }
+    name: "validate_coupon",
+    description: "Validate a coupon code and calculate the discount on a fare",
+    input_schema: {
+      type: "object",
+      properties: {
+        code: { type: "string", description: "Coupon code to validate" },
+        totalFare: { type: "number", description: "Total fare amount before discount" },
+        provider: { type: "string", description: "Airline provider name" }
+      },
+      required: ["code", "totalFare"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "get_faq",
-      parameters: {
-        type: "object",
-        properties: {
-          topic: {
-            type: "string",
-            enum: ["baggage", "checkin", "cancellation", "seats", "passport", "infant", "meal", "refund"]
-          }
-        },
-        required: ["topic"]
-      }
+    name: "get_faq",
+    description: "Get frequently asked question answers about airline policies",
+    input_schema: {
+      type: "object",
+      properties: {
+        topic: {
+          type: "string",
+          enum: ["baggage", "checkin", "cancellation", "seats", "passport", "infant", "meal", "refund"],
+          description: "The FAQ topic to look up"
+        }
+      },
+      required: ["topic"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "get_cancellation_estimate",
-      parameters: {
-        type: "object",
-        properties: { bookingRef: { type: "string" } },
-        required: ["bookingRef"]
-      }
+    name: "get_cancellation_estimate",
+    description: "Get the estimated penalty and refund amount if a booking is cancelled now",
+    input_schema: {
+      type: "object",
+      properties: {
+        bookingRef: { type: "string", description: "Booking reference number" }
+      },
+      required: ["bookingRef"]
     }
   },
   {
-    type: "function",
-    function: {
-      name: "escalate_to_human",
-      parameters: {
-        type: "object",
-        properties: {
-          reason: { type: "string" },
-          urgency: { type: "string", enum: ["low", "medium", "high"] }
-        },
-        required: ["reason", "urgency"]
-      }
+    name: "escalate_to_human",
+    description: "Escalate the conversation to a human support agent when unable to resolve the issue",
+    input_schema: {
+      type: "object",
+      properties: {
+        reason: { type: "string", description: "Reason for escalation" },
+        urgency: { type: "string", enum: ["low", "medium", "high"], description: "Urgency level" }
+      },
+      required: ["reason", "urgency"]
     }
   }
 ];
@@ -266,8 +255,8 @@ class ChatService {
   }
 
   async executeTool(toolCall, session, authContext) {
-    const toolName = toolCall.function.name;
-    const args = JSON.parse(toolCall.function.arguments || "{}");
+    const toolName = toolCall.name;
+    const args = toolCall.input || {};
 
     if (toolName === "search_flights") {
       const passengers = Number(args.adults || 1) + Number(args.children || 0);
@@ -386,52 +375,46 @@ class ChatService {
 
   async processMessage(session, userMessage, authContext) {
     const messages = [
-      { role: "system", content: SYSTEM_PROMPT },
       ...session.messages.slice(-12).map((item) => ({ role: item.role, content: item.content })),
       { role: "user", content: userMessage }
     ];
 
-    // let response = await openai.chat.completions.create({
-    //   model: "gpt-4o",
-    //   messages,
-    //   tools: TOOL_DEFINITIONS,
-    //   tool_choice: "auto",
-    //   max_tokens: 800,
-    //   temperature: 0.3
-    // });
-
     let response = await anthropic.messages.create({
+      model: "claude-opus-4-8",
       max_tokens: 1024,
+      system: SYSTEM_PROMPT,
       messages,
       tools: TOOL_DEFINITIONS,
-      tool_choice: "auto",
-      model: "claude-opus-4-8"
+      tool_choice: { type: "auto" }
     });
 
-    while (response.choices[0]?.finish_reason === "tool_calls") {
-      const toolCalls = response.choices[0].message.tool_calls || [];
+    while (response.stop_reason === "tool_use") {
+      const toolUseBlocks = response.content.filter((block) => block.type === "tool_use");
       const toolResults = await Promise.all(
-        toolCalls.map((toolCall) => this.executeTool(toolCall, session, authContext))
+        toolUseBlocks.map((block) => this.executeTool(block, session, authContext))
       );
 
-      messages.push(response.choices[0].message);
-      toolResults.forEach((result, index) => {
-        messages.push({
-          role: "tool",
-          tool_call_id: toolCalls[index].id,
-          content: JSON.stringify(result)
-        });
+      messages.push({ role: "assistant", content: response.content });
+      messages.push({
+        role: "user",
+        content: toolUseBlocks.map((block, index) => ({
+          type: "tool_result",
+          tool_use_id: block.id,
+          content: JSON.stringify(toolResults[index])
+        }))
       });
 
-      response = await openai.chat.completions.create({
-        model: "gpt-4o",
+      response = await anthropic.messages.create({
+        model: "claude-opus-4-8",
+        max_tokens: 1024,
+        system: SYSTEM_PROMPT,
         messages,
-        tools: TOOL_DEFINITIONS,
-        max_tokens: 800
+        tools: TOOL_DEFINITIONS
       });
     }
 
-    const reply = response.choices[0]?.message?.content || "I could not generate a response.";
+    const textBlock = response.content.find((block) => block.type === "text");
+    const reply = textBlock?.text || "I could not generate a response.";
     const suggestedActions = this.extractSuggestedActions(reply);
     return { reply, suggestedActions };
   }

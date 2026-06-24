@@ -15,19 +15,21 @@ const RESET_TOKEN_TTL_SECONDS = 30 * 60;
 const hashSha256 = (value) => crypto.createHash("sha256").update(value).digest("hex");
 
 const setRefreshCookie = (res, refreshToken) => {
+  const crossOrigin = env.nodeEnv !== "development";
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    sameSite: "strict",
-    secure: env.nodeEnv === "production",
+    sameSite: crossOrigin ? "none" : "strict",
+    secure: crossOrigin, // SameSite=None requires Secure=true
     maxAge: REFRESH_TOKEN_TTL_SECONDS * 1000
   });
 };
 
 const clearRefreshCookie = (res) => {
+  const crossOrigin = env.nodeEnv !== "development";
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    sameSite: "strict",
-    secure: env.nodeEnv === "production"
+    sameSite: crossOrigin ? "none" : "strict",
+    secure: crossOrigin
   });
 };
 
