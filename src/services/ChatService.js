@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require("uuid");
 const OpenAI = require("openai");
+const Anthrophic = require("@anthropic-ai/sdk");
 const ChatSession = require("../models/ChatSession");
 const Booking = require("../models/Booking");
 const CouponService = require("./CouponService");
@@ -7,6 +8,7 @@ const FlightSearchOrchestrator = require("./FlightSearchOrchestrator");
 const EmailService = require("./EmailService");
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const anthropic = new Anthrophic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SYSTEM_PROMPT =
   "You are a helpful flight booking assistant. You help users:\n- Search for flights between cities\n- Check existing booking status and details\n- Understand cancellation policies and refund status\n- Apply coupons and understand discounts\n- Get information about baggage policies, check-in, and seat selection\n- Resolve booking issues\n\nBe concise, friendly, and always confirm before taking any action.\nWhen searching flights, always confirm the route and date before searching.\nIf you cannot help with something, say so clearly and offer to escalate.\nNever share another user's booking information.";
@@ -389,13 +391,21 @@ class ChatService {
       { role: "user", content: userMessage }
     ];
 
-    let response = await openai.chat.completions.create({
-      model: "gpt-4o",
+    // let response = await openai.chat.completions.create({
+    //   model: "gpt-4o",
+    //   messages,
+    //   tools: TOOL_DEFINITIONS,
+    //   tool_choice: "auto",
+    //   max_tokens: 800,
+    //   temperature: 0.3
+    // });
+
+    let response = await anthropic.messages.create({
+      max_tokens: 1024,
       messages,
       tools: TOOL_DEFINITIONS,
       tool_choice: "auto",
-      max_tokens: 800,
-      temperature: 0.3
+      model: "claude-opus-4-8"
     });
 
     while (response.choices[0]?.finish_reason === "tool_calls") {

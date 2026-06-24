@@ -13,6 +13,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.105.0",
     "axios": "^1.11.0",
     "bcryptjs": "^2.4.3",
     "bull": "^4.16.5",
