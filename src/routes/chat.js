@@ -39,7 +39,7 @@ const optionalAuthenticate = async (req, res, next) => {
 router.post(
   "/message",
   optionalAuthenticate,
-  validate([body("sessionId").optional().isString(), body("message").isString().isLength({ min: 1 })]),
+  validate([body("sessionId").optional({ nullable: true }).isString(), body("message").isString().isLength({ min: 1 })]),
   asyncHandler(chatController.sendMessage)
 );
 router.get(
