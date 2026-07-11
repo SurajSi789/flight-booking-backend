@@ -299,7 +299,7 @@ class BookingService {
       try {
         const contentSource = providerMeta.contentSource || "GDS";
         const adapter = this.getAdapter("travelport");
-        const result = await adapter.priceAndInitiate(providerMeta, contentSource);
+        const result = await adapter.priceAndInitiate(providerMeta, contentSource, passengers);
         return {
           priceOfferMeta: result.priceOfferMeta,
           contentSource,
@@ -313,6 +313,28 @@ class BookingService {
         };
       } catch (err) {
         logger.warn(`[BookingService] Travelport pricing failed at initiate — using searched fare`, { bookingId: String(bookingId), provider: "travelport", message: err.message });
+        // Never drop the data booking needs. productCriteria (from search) is what Add Offer
+        // uses, so preserve a priceOfferMeta even when pricing fails — otherwise confirm dies
+        // with "priceOfferMeta missing in session" AFTER payment was captured.
+        const contentSource = providerMeta.contentSource || "GDS";
+        return {
+          priceOfferMeta: {
+            productCriteria: providerMeta.productCriteria || null,
+            catalogProductOfferingsIdentifier: providerMeta.sessionId || providerMeta.transactionId,
+            catalogProductOfferingIdentifier: providerMeta.offeringId,
+            productIdentifier: providerMeta.productId,
+            sessionId:  providerMeta.sessionId || providerMeta.transactionId,
+            offeringId: providerMeta.offeringId,
+            productId:  providerMeta.productId,
+            contentSource,
+            totalFare: fareBreakdown.totalFare,
+            baseFare:  fareBreakdown.baseFare,
+            taxes:     fareBreakdown.taxes,
+            currency:  fareBreakdown.currency,
+          },
+          contentSource,
+          fareBreakdown,
+        };
       }
     }
 
@@ -725,6 +747,14 @@ class BookingService {
     // Persist any ticket numbers returned by the provider at booking time
     if (Array.isArray(providerResponse?.tickets) && providerResponse.tickets.length) {
       booking.tickets = providerResponse.tickets;
+    }
+    // Persist ticketing status (Travelport: "ticketed" | "held" | "held_ticketing_failed").
+    // A held booking that couldn't be ticketed is still a valid PNR — flag it for follow-up.
+    if (providerResponse?.ticketingStatus) {
+      booking.providerMeta = {
+        ...booking.providerMeta,
+        ticketingStatus: providerResponse.ticketingStatus,
+      };
     }
     await booking.save();
 

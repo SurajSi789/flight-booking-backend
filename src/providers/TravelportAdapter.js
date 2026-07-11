@@ -58,8 +58,8 @@ class TravelportAdapter extends BaseFlightProvider {
   // Runs the pricing call against the chosen search offering, returning the data
   // that will be stored in Redis + booking.providerMeta.sessionCache.
 
-  async priceAndInitiate(providerMeta, contentSource = "GDS") {
-    const priced = await pricingSvc.priceOffer(providerMeta, contentSource);
+  async priceAndInitiate(providerMeta, contentSource = "GDS", passengers) {
+    const priced = await pricingSvc.priceOffer(providerMeta, contentSource, passengers);
 
     // The GDS booking (BuildFromProducts) rebuilds the offer in the workbench from the
     // ORIGINAL search identifiers, which the booking layer reads under these exact keys:
@@ -81,13 +81,20 @@ class TravelportAdapter extends BaseFlightProvider {
       });
     }
 
+    logger.info("[TravelportAdapter] priceAndInitiate → booking meta", {
+      productCriteriaCount: providerMeta.productCriteria?.length || 0,
+      isSandboxFallback: priced.isSandboxFallback || false,
+      catalogProductOfferingsIdentifier,
+    });
+
     return {
       priceOfferMeta: {
-        // Canonical names read by the booking layer (buildGdsOfferBody / createBooking guard)
+        // GDS booking Add Offer uses productCriteria (self-contained BuildFromProducts).
+        productCriteria: providerMeta.productCriteria || null,
+        // Kept for NDC booking + seat-map/ancillary calls.
         catalogProductOfferingsIdentifier,
         catalogProductOfferingIdentifier,
         productIdentifier,
-        // Preserve session identifiers from search (used by seat-map / ancillary calls)
         sessionId:  providerMeta.sessionId  || providerMeta.transactionId,
         offeringId: providerMeta.offeringId,
         productId:  priced.productId || priced.productIdentifier || providerMeta.productId,
@@ -132,6 +139,29 @@ class TravelportAdapter extends BaseFlightProvider {
       contact,
     });
 
+    // Best-effort e-ticket issuance (reference Section 5). The held PNR above is already a
+    // valid booking with payment captured, so a ticketing failure must NOT undo it — we keep
+    // the PNR and flag ticketingStatus for retry/manual follow-up.
+    let tickets = [];
+    let ticketingStatus = "held";
+    try {
+      const tk = await ticketingSvc.issueTickets({
+        pnr: result.pnr,
+        totalFare: priceOfferMeta.totalFare,
+        currency: priceOfferMeta.currency || "INR",
+      });
+      tickets = tk.tickets || [];
+      ticketingStatus = "ticketed";
+      logger.info("[TravelportAdapter] E-tickets issued", { pnr: result.pnr, ticketWorkbenchId: tk.ticketWorkbenchId, ticketCount: tickets.length });
+    } catch (tErr) {
+      ticketingStatus = "held_ticketing_failed";
+      logger.error("[TravelportAdapter] Ticket issuance failed — booking stays HELD (payment captured, retry later)", {
+        pnr: result.pnr,
+        message: tErr.message,
+        stack: tErr.stack,
+      });
+    }
+
     return {
       pnr: result.pnr,
       reservationIdentifier: result.reservationIdentifier,
@@ -139,6 +169,8 @@ class TravelportAdapter extends BaseFlightProvider {
       travelerIds: result.travelerIds,
       committedOfferId: result.committedOfferId,
       committedProductId: result.committedProductId,
+      tickets,
+      ticketingStatus,
       status: "confirmed",
     };
   }

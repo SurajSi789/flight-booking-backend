@@ -127,6 +127,47 @@ function buildIndexes(referenceList) {
 
 // ── Per-offering normalizer ───────────────────────────────────────────────────
 
+// Builds the ProductCriteriaAir array Travelport's GDS BuildFromProducts price/book calls
+// require. Each SpecificFlightCriteria is self-contained (flight number/date/class), so it
+// does NOT depend on a stateful GDS session — unlike the CatalogProductOfferings refs.
+// Mirrors the reference collection's buildPayload().
+function buildProductCriteria(product, flightIndex, brandIndex) {
+  const paxFlight = (product.PassengerFlight || [])[0] || {};
+  const flightProducts = paxFlight.FlightProduct || [];
+  const specificFlightCriteria = [];
+
+  for (const seg of (product.FlightSegment || [])) {
+    const flight = flightIndex[seg.Flight?.FlightRef];
+    if (!flight) continue;
+
+    const fp = flightProducts.find((x) => x.segmentSequence === seg.sequence) || flightProducts[0] || {};
+    const brandRef = fp.Brand?.BrandRef;
+    const brandEntry = brandRef ? brandIndex[brandRef] : null;
+    const brandTier = brandEntry && brandEntry.tier !== undefined ? String(brandEntry.tier) : undefined;
+
+    specificFlightCriteria.push({
+      flightNumber: flight.number || "",
+      carrier:      flight.carrier || "",
+      departureDate: flight.Departure?.date || "",
+      departureTime: flight.Departure?.time || "",
+      arrivalDate:   flight.Arrival?.date || "",
+      arrivalTime:   flight.Arrival?.time || "",
+      from: flight.Departure?.location || "",
+      to:   flight.Arrival?.location || "",
+      classOfService: fp.classOfService || "Y",
+      cabin:          fp.cabin || "Economy",
+      segmentSequence: seg.sequence,
+      ...(brandTier !== undefined ? { brandTier } : {}),
+      AvailabilitySourceCode: flight.AvailabilitySourceCode || "",
+      ContentSource: "GDS",
+    });
+  }
+
+  return specificFlightCriteria.length
+    ? [{ SpecificFlightCriteria: specificFlightCriteria, sequence: 1 }]
+    : [];
+}
+
 function extractBaggageFromTerms(termsData) {
   if (!termsData) return { cabin: null, checkin: null };
   const allowances = termsData.BaggageAllowance || [];
@@ -258,10 +299,13 @@ function normalizeOffering(offering, { flightIndex, productIndex, brandIndex, te
           // sessionId = CatalogProductOfferings.Identifier.value (production UUID)
           //             OR transactionId (sandbox fallback — no stateful GDS session)
           sessionId,            // used as CatalogProductOfferingsIdentifier in price request
-          offeringId: offering.id, // e.g. "o1"
-          productId:  productRef,  // e.g. "p0"
+          offeringId: offering.id, // e.g. "o1" (local ref — NOT valid for booking Add Offer)
+          productId:  productRef,  // e.g. "p0" (local ref — NOT valid for booking Add Offer)
           contentSource: brandOffering.ContentSource || "GDS",
-          // searchPrice preserved as fallback when sandbox pricing step fails
+          // Self-contained flight criteria used to build the GDS BuildFromProducts price/book
+          // requests — this is what actually works (no session dependency).
+          productCriteria: buildProductCriteria(product, flightIndex, brandIndex),
+          // searchPrice preserved as a last-resort fallback if live pricing fails.
           searchPrice: { baseFare, taxes, totalFare, currency },
         },
       });

@@ -12,6 +12,7 @@
  */
 
 const http = require("./http.client");
+const { logger } = require("../../config/db");
 
 const GDS_PRICE_PATH = "air/price/offers/buildfromproducts";
 const NDC_PRICE_PATH = "air/price/offers/buildfromcatalogproductofferings";
@@ -32,25 +33,18 @@ function buildPassengerCriteria(passengers) {
     .map(([code, n]) => ({ "@type": "PassengerCriteria", number: n, passengerTypeCode: code }));
 }
 
-function buildGdsPriceBody({ transactionId, offeringId, productId, passengers }) {
+// GDS pricing uses the self-contained BuildFromProducts / ProductCriteriaAir payload — the
+// same shape Travelport's own reference collection uses. No CatalogProductOfferings session
+// refs (which the sandbox does not persist and which are invalid for booking).
+function buildGdsPriceBody({ productCriteria, passengers }) {
   return {
     "@type": "OfferQueryBuildFromProducts",
     BuildFromProductsRequest: {
       "@type": "BuildFromProductsRequestAir",
-      contentSourceList: ["GDS"],
       PassengerCriteria: buildPassengerCriteria(passengers),
-      CatalogProductOfferingsIdentifier: {
-        Identifier: { authority: "Travelport", value: transactionId },
-      },
-      CatalogProductOfferingsSelection: {
-        CatalogProductOfferingIdentifier: {
-          Identifier: { authority: "Travelport", value: offeringId },
-        },
-        ProductIdentifier: [
-          { Identifier: { authority: "Travelport", value: productId } },
-        ],
-      },
+      ProductCriteriaAir: productCriteria,
     },
+    validateInventoryInd: true,
   };
 }
 
@@ -141,45 +135,78 @@ function extractPricedOffer(raw) {
 const SANDBOX_PRODUCT_CRITERIA_ERROR = "3459";
 
 async function priceOffer(providerMeta, contentSource, passengers) {
-  // sessionId = production UUID from CatalogProductOfferings.Identifier.value
-  //           = transactionId in sandbox (fallback, GDS may reject it)
-  const sessionId     = providerMeta.sessionId  || providerMeta.transactionId || providerMeta.catalogProductOfferingsIdentifier;
-  const offeringId    = providerMeta.offeringId || providerMeta.catalogProductOfferingIdentifier;
-  const productId     = providerMeta.productId  || providerMeta.productIdentifier;
-  const source        = contentSource || providerMeta.contentSource || "GDS";
-
-  if (!sessionId || !offeringId || !productId) {
-    throw new Error(
-      `Travelport pricing: missing identifiers — sessionId=${sessionId} offeringId=${offeringId} productId=${productId}`
-    );
-  }
-
-  const ids    = { transactionId: sessionId, offeringId, productId, passengers };
+  const source = contentSource || providerMeta.contentSource || "GDS";
   const isNdc  = String(source).toUpperCase() === "NDC";
   const path   = isNdc ? NDC_PRICE_PATH : GDS_PRICE_PATH;
-  const body   = isNdc ? buildNdcPriceBody(ids) : buildGdsPriceBody(ids);
+
+  let body;
+  if (isNdc) {
+    // NDC keeps the CatalogProductOfferings model (its own valid structure).
+    const sessionId  = providerMeta.sessionId  || providerMeta.transactionId || providerMeta.catalogProductOfferingsIdentifier;
+    const offeringId = providerMeta.offeringId || providerMeta.catalogProductOfferingIdentifier;
+    const productId  = providerMeta.productId  || providerMeta.productIdentifier;
+    if (!sessionId || !offeringId || !productId) {
+      throw new Error(`Travelport pricing (NDC): missing identifiers — sessionId=${sessionId} offeringId=${offeringId} productId=${productId}`);
+    }
+    body = buildNdcPriceBody({ transactionId: sessionId, offeringId, productId, passengers });
+  } else {
+    // GDS uses the self-contained ProductCriteriaAir payload (no session dependency).
+    const productCriteria = providerMeta.productCriteria;
+    if (!Array.isArray(productCriteria) || productCriteria.length === 0) {
+      throw new Error("Travelport pricing (GDS): providerMeta.productCriteria is missing — cannot build BuildFromProducts request (re-run search)");
+    }
+    body = buildGdsPriceBody({ productCriteria, passengers });
+  }
+
+  logger.info("[Travelport] priceOffer request", {
+    source, path,
+    productCriteriaCount: providerMeta.productCriteria?.length || 0,
+    passengerCount: Array.isArray(passengers) ? passengers.length : "default(1 ADT)",
+    hasSearchPrice: Boolean(providerMeta.searchPrice),
+  });
 
   let raw;
   try {
     raw = await http.post(path, body);
   } catch (err) {
-    // If the GDS rejects due to missing session (sandbox limitation), use search price
     if (providerMeta.searchPrice) {
+      logger.warn("[Travelport] priceOffer: live price threw — using searchPrice fallback", { message: err.message });
       return buildFallbackOffer(providerMeta);
     }
+    logger.error("[Travelport] priceOffer: live price failed and no searchPrice fallback available", { message: err.message });
     throw err;
   }
 
-  // Check for GDS-level business errors even on HTTP 200
+  // Business errors can arrive on HTTP 200 under OfferListResponse.Result.Error.
   const responseWrapper = raw?.OfferListResponse;
   const errors = responseWrapper?.Result?.Error || [];
-  const sandboxError = errors.find((e) => e.SourceCode === SANDBOX_PRODUCT_CRITERIA_ERROR);
-  if (sandboxError && !responseWrapper?.OfferList && providerMeta.searchPrice) {
-    // Sandbox limitation — use the BestCombinablePrice from search as the price
-    return buildFallbackOffer(providerMeta);
+  if (errors.length && !responseWrapper?.OfferList) {
+    if (providerMeta.searchPrice) {
+      logger.warn("[Travelport] priceOffer: GDS returned errors — using searchPrice fallback", { errors });
+      return buildFallbackOffer(providerMeta);
+    }
+    throw new Error(`Travelport pricing rejected by GDS: ${errors.map((e) => `[${e.SourceCode}] ${e.Message}`).join("; ")}`);
   }
 
-  return extractPricedOffer(raw);
+  // Booking's Add Offer uses productCriteria (from search), not the priced offer — so a
+  // pricing parse failure must NOT block the booking. Fall back to the searched fare.
+  let priced;
+  try {
+    priced = extractPricedOffer(raw);
+  } catch (parseErr) {
+    logger.warn("[Travelport] priceOffer: could not extract priced offer from 200 response", {
+      message: parseErr.message,
+      responseKeys: raw && typeof raw === "object" ? Object.keys(raw) : typeof raw,
+      responseSnippet: JSON.stringify(raw || "").slice(0, 3000),
+    });
+    if (providerMeta.searchPrice) return buildFallbackOffer(providerMeta);
+    throw parseErr;
+  }
+  logger.info("[Travelport] priceOffer: live pricing succeeded", {
+    offerId: priced.offerId, offerIdentifier: priced.offerIdentifier,
+    productIdentifier: priced.productIdentifier, isSandboxFallback: false,
+  });
+  return priced;
 }
 
 function buildFallbackOffer(providerMeta) {
@@ -200,4 +227,4 @@ function buildFallbackOffer(providerMeta) {
   };
 }
 
-module.exports = { priceOffer, buildGdsPriceBody, buildNdcPriceBody };
+module.exports = { priceOffer, buildGdsPriceBody, buildNdcPriceBody, buildPassengerCriteria };

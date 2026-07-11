@@ -24,14 +24,54 @@ async function buildHeaders(extra = {}) {
   };
 }
 
+// Travelport returns business/validation errors as HTTP 200 with a Result.Error array
+// nested under a response-specific wrapper. Collect it across every known wrapper.
+function getEmbeddedErrors(data) {
+  if (!data || typeof data !== "object") return null;
+  const candidates = [
+    data.Result?.Error,
+    data.OfferListResponse?.Result?.Error,
+    data.ReservationResponse?.Result?.Error,
+    data.ReservationListResponse?.Result?.Error,
+    data.TravelerResponse?.Result?.Error,
+    data.CatalogProductOfferingsResponse?.Result?.Error,
+    data.errors,
+    data.Errors,
+  ];
+  for (const errs of candidates) {
+    if (Array.isArray(errs) && errs.length) return errs;
+  }
+  return null;
+}
+
+function formatErrors(errs) {
+  return errs
+    .map((e) => `[${e.SourceCode || e.category || e.StatusCode || "ERR"}] ${e.Message || e.message || "error"}`)
+    .join("; ");
+}
+
+// Throw if a (HTTP-200) response body carries an embedded Travelport error. Callers use
+// this so a business failure (e.g. "OFFER DATA IS INVALID") stops the flow immediately
+// instead of silently proceeding to a later step that fails more cryptically.
+function assertNoEmbeddedError(data, step) {
+  const errs = getEmbeddedErrors(data);
+  if (errs) {
+    logger.error(`[Travelport] ${step} returned an embedded error`, {
+      errors: errs,
+      bodySnippet: JSON.stringify(data || "").slice(0, 3000),
+    });
+    const err = new Error(`Travelport ${step}: ${formatErrors(errs)}`);
+    err.travelportEmbeddedError = errs;
+    throw err;
+  }
+  return data;
+}
+
 function extractErrorMessage(err) {
   const data = err.response?.data;
+  const embedded = getEmbeddedErrors(data);
+  if (embedded) return formatErrors(embedded);
   return (
-    data?.errors?.[0]?.message ||
-    data?.errors?.[0]?.Message ||
-    data?.Errors?.[0]?.Message ||
-    data?.Result?.Error?.[0]?.Message ||
-    data?.ReservationResponse?.Result?.Error?.[0]?.Message ||
     data?.error_description ||
     data?.error?.message ||
     data?.message ||
@@ -83,4 +123,4 @@ const del = (path, body, extra) => request({ method: "DELETE", path, body, heade
 // is only in a response header (e.g. Location on workbench init).
 const postFull = (path, body, extra) => request({ method: "POST", path, body, headers: extra, fullResponse: true });
 
-module.exports = { get, post, put, del, postFull, buildUrl };
+module.exports = { get, post, put, del, postFull, buildUrl, assertNoEmbeddedError, getEmbeddedErrors };

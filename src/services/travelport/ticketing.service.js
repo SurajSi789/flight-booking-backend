@@ -1,18 +1,18 @@
 /**
- * Travelport Trip Services — Post-Commit Ticket Issuance
+ * Travelport Trip Services — Post-Commit Ticket Issuance (reference Section 5)
  *
- * Used only when a reservation was committed without payment (held booking).
- * Our primary booking.service.js uses the instant-pay flow so tickets are
- * issued at commit time. This service handles the fallback / retry path.
+ * Runs AFTER a held PNR exists (booking.service.createBooking). Issues the e-ticket:
+ *   1. Reopen workbench from locator → POST air/book/session/reservationworkbench/buildfromlocator?Locator={PNR}
+ *   2. Add FOP Cash                  → POST air/payment/reservationworkbench/{id}/formofpayment
+ *   3. Apply payment                 → POST air/paymentoffer/reservationworkbench/{id}/payments
+ *   4. Commit ticket issuance        → POST air/book/reservation/reservations/{id}
  *
- * Steps:
- *   1. Reopen workbench from locator  →  POST /air/book/session/reservationworkbench/buildfromlocator
- *   2. Add FOP Cash                   →  POST /air/payment/reservationworkbench/{id}/formofpayment
- *   3. Apply payment                  →  POST /air/paymentoffer/reservationworkbench/{id}/payments
- *   4. Commit with ticketing          →  POST /air/book/reservation/reservations/{id}
+ * Best-effort: the caller treats a held PNR as a successful booking, so a ticketing
+ * failure here must not undo it. This module throws on failure; the caller catches it.
  */
 
 const http = require("./http.client");
+const { logger } = require("../../config/db");
 const {
   addFormOfPaymentCash,
   applyPayment,
@@ -21,74 +21,73 @@ const {
 
 const BUILD_FROM_LOCATOR_PATH = "air/book/session/reservationworkbench/buildfromlocator";
 
-// Travelport requires a different Content-Version for the buildfromlocator endpoint
-const LOCATOR_HEADERS = { "Content-Version": "6_1" };
-
 // ── Reopen workbench from PNR ──────────────────────────────────────────────────
 
-async function reopenWorkbenchFromLocator(pnr, reservationIdentifier) {
-  const body = {
-    "@type": "ReservationQueryBuildFromLocator",
-    ReservationLocator: {
-      locator: pnr,
-      ...(reservationIdentifier
-        ? { ReservationIdentifier: { Identifier: { authority: "Travelport", value: reservationIdentifier } } }
-        : {}),
-    },
-  };
+async function reopenWorkbenchFromLocator(pnr) {
+  // Locator is a query param; the body is empty (per the reference collection).
+  const path = `${BUILD_FROM_LOCATOR_PATH}?Locator=${encodeURIComponent(pnr)}`;
+  logger.info("[Travelport] Ticketing: reopen workbench from locator", { pnr, path });
 
-  const raw = await http.post(BUILD_FROM_LOCATOR_PATH, body, LOCATOR_HEADERS);
+  const { data: raw, headers, status } = await http.postFull(path, {});
+  http.assertNoEmbeddedError(raw, "buildfromlocator");
 
-  const workbenchId =
-    raw?.ReservationWorkbench?.Identifier?.value ||
+  // Workbench id used by the follow-up FOP/payment calls = ReservationResponse.Identifier.value.
+  let workbenchId =
+    raw?.ReservationResponse?.Identifier?.value ||
     raw?.Identifier?.value ||
     raw?.id;
-
   if (!workbenchId) {
+    const loc = headers?.location || headers?.["content-location"] || "";
+    const m = String(loc).match(/reservationworkbench\/([^/?#]+)/i);
+    if (m) workbenchId = m[1];
+  }
+
+  const reservation = raw?.ReservationResponse?.Reservation || raw?.Reservation || {};
+  const offers = reservation?.Offer || [];
+  const firstOffer = Array.isArray(offers) ? offers[0] : offers;
+  const offerIdentifier = firstOffer?.Identifier?.value || firstOffer?.id;
+
+  if (!workbenchId || !offerIdentifier) {
+    logger.error("[Travelport] Ticketing: could not reopen workbench from locator", {
+      pnr, status, workbenchId, offerIdentifier,
+      location: headers?.location || headers?.["content-location"] || null,
+      bodySnippet: JSON.stringify(raw || "").slice(0, 3000),
+    });
     throw new Error(`Travelport ticketing: could not reopen workbench from locator ${pnr}`);
   }
 
-  // Extract current offer and product from the reopened workbench
-  const reservation  = raw?.ReservationWorkbench?.Reservation || raw?.Reservation || {};
-  const offers       = reservation?.Offer || [];
-  const firstOffer   = Array.isArray(offers) ? offers[0] : offers;
-  const offerIdentifier  = firstOffer?.Identifier?.value || firstOffer?.id;
-  const products     = firstOffer?.Product || [];
-  const productIdentifier = (Array.isArray(products) ? products[0] : products)?.Identifier?.value;
-
-  return { workbenchId, offerIdentifier, productIdentifier };
+  logger.info("[Travelport] Ticketing: workbench reopened", { pnr, workbenchId, offerIdentifier });
+  return { workbenchId, offerIdentifier };
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────────
 
 /**
- * Issue tickets for a held booking.
+ * Issue e-tickets for a held booking.
  * @param {object} opts
- * @param {string} opts.pnr - GDS locator code (e.g. "ABCDEF")
- * @param {string} [opts.reservationIdentifier] - Travelport UUID for the reservation
- * @param {number} opts.totalFare - Total fare to charge
- * @param {string} [opts.currency] - Currency code (default USD)
+ * @param {string} opts.pnr       - GDS locator (e.g. "DVZ11L")
+ * @param {number} opts.totalFare - fare to settle against the offer
+ * @param {string} [opts.currency]
  */
-async function issueTickets({ pnr, reservationIdentifier, totalFare, currency = "USD" }) {
+async function issueTickets({ pnr, totalFare, currency = "INR" }) {
   if (!pnr) throw new Error("Travelport ticketing: pnr is required");
-  if (!totalFare) throw new Error("Travelport ticketing: totalFare is required");
 
-  // Step 1: reopen workbench from PNR
-  const { workbenchId, offerIdentifier } = await reopenWorkbenchFromLocator(pnr, reservationIdentifier);
-
-  // Step 2: add cash FOP
+  const { workbenchId, offerIdentifier } = await reopenWorkbenchFromLocator(pnr);
   const { fopId, fopIdentifier } = await addFormOfPaymentCash(workbenchId);
-
-  // Step 3: apply payment
   await applyPayment(workbenchId, { totalFare, currency, fopId, fopIdentifier, offerIdentifier });
 
-  // Step 4: commit — now that payment is attached, this will ticket the reservation
+  // Commit — with payment attached, this issues the ticket. Re-uses the commit parser
+  // (throws if the GDS returns an error / no locator).
   const result = await commitReservation(workbenchId);
+
+  logger.info("[Travelport] Ticketing: ticket issuance committed", {
+    pnr, ticketWorkbenchId: workbenchId, locator: result.pnr,
+  });
 
   return {
     pnr: result.pnr || pnr,
-    reservationIdentifier: result.reservationIdentifier || reservationIdentifier,
     ticketWorkbenchId: workbenchId,
+    tickets: Array.isArray(result.tickets) ? result.tickets : [],
     ...result,
   };
 }
