@@ -11,6 +11,19 @@ if (missing.length > 0) {
   throw new Error(`Missing required environment variables: ${missing.join(", ")}`);
 }
 
+// Reject weak signing secrets. A short/guessable JWT secret lets an attacker forge
+// tokens, so fail closed in production; warn in dev to avoid blocking local work.
+const MIN_SECRET_LENGTH = 32;
+const secretKeys = ["JWT_ACCESS_SECRET", "JWT_REFRESH_SECRET", "ADMIN_JWT_SECRET"];
+const weakSecrets = secretKeys.filter((k) => String(process.env[k] || "").length < MIN_SECRET_LENGTH);
+if (weakSecrets.length > 0) {
+  const msg = `Weak signing secret(s) (< ${MIN_SECRET_LENGTH} chars): ${weakSecrets.join(", ")}`;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(msg);
+  }
+  console.warn(`[env] ${msg}`);
+}
+
 const optional = [
   "INDIGO_TARGET_BRANCH","INDIGO_USERNAME","INDIGO_PASSWORD",
   "AIX_USERNAME","AIX_PASSWORD",
@@ -48,6 +61,8 @@ const isPaymentMock =
 const env = {
   nodeEnv: process.env.NODE_ENV || "development",
   port: Number(process.env.PORT || 4000),
+  // Public URL of the customer web app — used to build email verification / reset links.
+  appBaseUrl: process.env.FRONTEND_URL || process.env.APP_BASE_URL || "http://localhost:5173",
   mongoUri: process.env.MONGO_URI,
   redisUrl: process.env.REDIS_URL,
   jwtAccessSecret: process.env.JWT_ACCESS_SECRET,

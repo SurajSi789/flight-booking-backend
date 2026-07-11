@@ -41,6 +41,11 @@ class EmailService {
     }
   }
 
+  /** Whether a real email transport (Brevo API or SMTP) is available. */
+  isConfigured() {
+    return Boolean(this.brevoApiKey || this.transport);
+  }
+
   async send({ to, subject, html, attachments = [] }) {
     // ── Brevo HTTP API (used on Render — bypasses SMTP port blocking) ─────────
     if (this.brevoApiKey) {
@@ -264,12 +269,19 @@ class EmailService {
 
   // ── Public email methods ─────────────────────────────────────────────────
 
-  async sendOTPEmail({ to, otp, name }) {
+  async sendOTPEmail({ to, otp, name, verifyLink, expiryMinutes = 15 }) {
+    const linkBlock = verifyLink
+      ? `
+      <p style="margin:24px 0 12px;font-size:13px;color:#64748b;">— or verify in one click —</p>
+      <a href="${verifyLink}" style="display:inline-block;padding:12px 28px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;margin-bottom:12px;">Verify my email</a>
+      <p style="margin-top:8px;font-size:11px;color:#cbd5e1;word-break:break-all;">Or copy this link: ${verifyLink}</p>`
+      : "";
     const body = `
       <p style="margin:0 0 12px;font-size:15px;color:#1e293b;">Hi <strong>${name || "there"}</strong>,</p>
-      <p style="margin:0 0 20px;font-size:14px;color:#374151;">Use the OTP below to verify your account. It expires in <strong>10 minutes</strong>.</p>
-      <div style="display:inline-block;padding:16px 28px;background:#0f172a;color:#ffffff;border-radius:8px;font-size:28px;letter-spacing:6px;font-weight:700;margin-bottom:20px;">${otp}</div>
-      <p style="font-size:12px;color:#94a3b8;">If you did not request this, you can safely ignore this email.</p>
+      <p style="margin:0 0 20px;font-size:14px;color:#374151;">Enter the OTP below to verify your account. It expires in <strong>${expiryMinutes} minutes</strong>.</p>
+      <div style="display:inline-block;padding:16px 28px;background:#0f172a;color:#ffffff;border-radius:8px;font-size:28px;letter-spacing:6px;font-weight:700;margin-bottom:8px;">${otp}</div>
+      ${linkBlock}
+      <p style="margin-top:20px;font-size:12px;color:#94a3b8;">If you did not request this, you can safely ignore this email — the account will be removed automatically.</p>
     `;
     return this.send({ to, subject: "Your OTP – SkyBook Account Verification", html: this._wrap(body) });
   }

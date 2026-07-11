@@ -11,6 +11,11 @@ const redis = createRedisClient();
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60;
 const REFRESH_TOKEN_TTL_SECONDS = 7 * 24 * 60 * 60;
 const RESET_TOKEN_TTL_SECONDS = 30 * 60;
+// Window a user has to complete email verification. Also governs when the TTL
+// index purges an abandoned unverified signup so the email can be reused.
+const VERIFICATION_TTL_MINUTES = 15;
+// Max wrong OTP guesses before the code is invalidated and must be re-requested.
+const MAX_OTP_ATTEMPTS = 5;
 
 const hashSha256 = (value) => crypto.createHash("sha256").update(value).digest("hex");
 
@@ -53,6 +58,7 @@ const issueTokens = async (user) => {
       userId: user._id.toString(),
       role: user.role,
       email: user.email,
+      tokenVersion: user.tokenVersion || 0,
       jti
     },
     env.jwtAccessSecret,
@@ -74,47 +80,61 @@ const issueTokens = async (user) => {
   return { accessToken, refreshToken };
 };
 
+const buildVerifyLink = (token) =>
+  `${env.appBaseUrl.replace(/\/$/, "")}/verify-email?token=${token}`;
+
 const register = async (req, res) => {
   const { name, email, phone, password } = req.body;
-  const existing = await User.findByEmail(email);
+  const passwordHash = await bcrypt.hash(password, 12);
+
+  // Reuse an existing UNVERIFIED record instead of hard-failing: a user who
+  // abandoned the OTP step must be able to start over with the same email.
+  // Only a fully verified account blocks re-registration.
+  const existing = await User.findByEmail(email).select("+otpHash +verifyTokenHash");
+  let user;
   if (existing) {
-    return res.status(409).json({ success: false, message: "Email already registered" });
+    if (existing.isVerified) {
+      return res.status(409).json({ success: false, message: "Email already registered" });
+    }
+    existing.name = name;
+    existing.phone = phone;
+    existing.passwordHash = passwordHash;
+    user = existing;
+  } else {
+    user = new User({ name, email, phone, passwordHash, isVerified: false });
   }
 
-  const passwordHash = await bcrypt.hash(password, 12);
-  const user = new User({
-    name,
-    email,
-    phone,
-    passwordHash,
-    isVerified: false
-  });
-
-  const otp = user.generateOTP(10);
+  const { otp, token } = user.issueVerificationChallenge(VERIFICATION_TTL_MINUTES);
   await user.save();
+  await redis.del(`otp-attempts:${user._id}`); // fresh code → reset guess counter
 
   await EmailService.sendOTPEmail({
     to: user.email,
     otp,
-    name: `${user.name.first} ${user.name.last}`
+    name: `${user.name.first} ${user.name.last}`,
+    verifyLink: buildVerifyLink(token),
+    expiryMinutes: VERIFICATION_TTL_MINUTES
   });
 
-  // In staging, auto-verify so users aren't stuck without a working SMTP server
-  if (process.env.NODE_ENV !== "production") {
+  // If no email transport is configured (e.g. local dev without SMTP/Brevo),
+  // auto-verify so developers aren't stranded. When email IS configured the
+  // real OTP/link flow runs, in every environment.
+  if (!EmailService.isConfigured()) {
     user.isVerified = true;
+    user.clearVerificationChallenge();
     await user.save();
   }
 
   return res.status(201).json({
     success: true,
     message: "OTP sent to email",
-    data: { userId: user._id }
+    data: { userId: user._id, expiresAt: user.verificationExpiresAt }
   });
 };
 
 const verifyOtp = async (req, res) => {
   const { userId, otp } = req.body;
-  const user = await User.findById(userId).select("+otpHash +refreshTokenHash");
+  const user = await User.findById(userId).select("+otpHash +verifyTokenHash +refreshTokenHash");
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
@@ -122,14 +142,29 @@ const verifyOtp = async (req, res) => {
     return res.status(400).json({ success: false, message: "OTP expired or unavailable" });
   }
 
+  const attemptsKey = `otp-attempts:${user._id}`;
   const otpHash = hashSha256(otp);
   if (otpHash !== user.otpHash) {
+    // Cap wrong guesses so the 6-digit code can't be brute-forced in its window.
+    const attempts = await redis.incr(attemptsKey);
+    if (attempts === 1) {
+      await redis.expire(attemptsKey, VERIFICATION_TTL_MINUTES * 60);
+    }
+    if (attempts >= MAX_OTP_ATTEMPTS) {
+      user.otpHash = undefined;
+      user.otpExpiry = undefined;
+      await user.save();
+      return res.status(429).json({
+        success: false,
+        message: "Too many incorrect attempts. Please request a new code."
+      });
+    }
     return res.status(400).json({ success: false, message: "Invalid OTP" });
   }
 
+  await redis.del(attemptsKey);
   user.isVerified = true;
-  user.otpHash = undefined;
-  user.otpExpiry = undefined;
+  user.clearVerificationChallenge();
   user.lastLoginAt = new Date();
 
   const { accessToken, refreshToken } = await issueTokens(user);
@@ -138,6 +173,39 @@ const verifyOtp = async (req, res) => {
   return res.json({
     success: true,
     message: "OTP verified successfully",
+    data: {
+      accessToken,
+      user: buildUserPayload(user)
+    }
+  });
+};
+
+const verifyEmail = async (req, res) => {
+  const { token } = req.body;
+  const tokenHash = hashSha256(token);
+  const user = await User.findOne({ verifyTokenHash: tokenHash }).select(
+    "+verifyTokenHash +refreshTokenHash"
+  );
+  if (!user) {
+    return res.status(400).json({ success: false, message: "Invalid or expired verification link" });
+  }
+  if (user.isVerified) {
+    return res.status(400).json({ success: false, message: "Account is already verified. Please log in." });
+  }
+  if (!user.verificationExpiresAt || user.verificationExpiresAt < new Date()) {
+    return res.status(400).json({ success: false, message: "Verification link expired. Please sign up again." });
+  }
+
+  user.isVerified = true;
+  user.clearVerificationChallenge();
+  user.lastLoginAt = new Date();
+
+  const { accessToken, refreshToken } = await issueTokens(user);
+  setRefreshCookie(res, refreshToken);
+
+  return res.json({
+    success: true,
+    message: "Email verified successfully",
     data: {
       accessToken,
       user: buildUserPayload(user)
@@ -181,7 +249,20 @@ const login = async (req, res) => {
   });
 };
 
+const allowedOrigins = new Set([
+  ...env.corsWhitelist,
+  ...(env.adminCorsOrigin ? [env.adminCorsOrigin] : [])
+]);
+
 const refresh = async (req, res) => {
+  // CSRF defense-in-depth: the refresh cookie is SameSite=None in production, so
+  // reject cross-site callers by Origin. (CORS preflight already blocks JSON
+  // POSTs from unknown origins; this also stops "simple" form-encoded POSTs.)
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.size > 0 && !allowedOrigins.has(origin)) {
+    return res.status(403).json({ success: false, message: "Origin not allowed" });
+  }
+
   const refreshToken = req.cookies?.refreshToken;
   if (!refreshToken) {
     return res.status(401).json({ success: false, message: "Refresh token cookie not found" });
@@ -242,7 +323,7 @@ const logout = async (req, res) => {
 
 const resendOtp = async (req, res) => {
   const { userId } = req.body;
-  const user = await User.findById(userId).select("+otpHash");
+  const user = await User.findById(userId).select("+otpHash +verifyTokenHash");
   if (!user) {
     return res.status(404).json({ success: false, message: "User not found" });
   }
@@ -262,24 +343,33 @@ const resendOtp = async (req, res) => {
     });
   }
 
-  const otp = user.generateOTP(10);
+  const { otp, token } = user.issueVerificationChallenge(VERIFICATION_TTL_MINUTES);
   await user.save();
+  await redis.del(`otp-attempts:${user._id}`); // fresh code → reset guess counter
   await EmailService.sendOTPEmail({
     to: user.email,
     otp,
-    name: `${user.name.first} ${user.name.last}`
+    name: `${user.name.first} ${user.name.last}`,
+    verifyLink: buildVerifyLink(token),
+    expiryMinutes: VERIFICATION_TTL_MINUTES
   });
 
-  return res.json({ success: true, message: "OTP resent to email" });
+  return res.json({
+    success: true,
+    message: "OTP resent to email",
+    data: { expiresAt: user.verificationExpiresAt }
+  });
 };
 
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
   const user = await User.findByEmail(email);
+  // Product decision: surface unknown emails explicitly (nudge to sign up) rather
+  // than the generic "if it exists" message. Note this permits email enumeration.
   if (!user) {
-    return res.json({
-      success: true,
-      message: "If this email exists, a reset link has been sent"
+    return res.status(404).json({
+      success: false,
+      message: "This email is not registered with us. Please sign up."
     });
   }
 
@@ -287,12 +377,12 @@ const forgotPassword = async (req, res) => {
   const tokenHash = hashSha256(rawToken);
   await redis.set(`reset:${tokenHash}`, user._id.toString(), "EX", RESET_TOKEN_TTL_SECONDS);
 
-  const resetLink = `${process.env.APP_BASE_URL || "http://localhost:3000"}/reset-password?token=${rawToken}`;
+  const resetLink = `${env.appBaseUrl.replace(/\/$/, "")}/reset-password?token=${rawToken}`;
   await EmailService.sendPasswordResetEmail({ to: user.email, resetLink });
 
   return res.json({
     success: true,
-    message: "If this email exists, a reset link has been sent"
+    message: "Password reset link sent to your email"
   });
 };
 
@@ -322,6 +412,7 @@ const resetPassword = async (req, res) => {
 module.exports = {
   register,
   verifyOtp,
+  verifyEmail,
   login,
   refresh,
   logout,

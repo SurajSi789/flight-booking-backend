@@ -45,7 +45,16 @@ const allowedOrigins = new Set([
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.size === 0 || allowedOrigins.has(origin)) {
+      // No Origin header → non-browser client (curl, mobile, server-to-server). Allow.
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.has(origin)) {
+        return callback(null, true);
+      }
+      // Fail CLOSED: an unconfigured whitelist must not reflect arbitrary origins
+      // with credentials. Only relax this for local development convenience.
+      if (env.nodeEnv !== "production" && allowedOrigins.size === 0) {
         return callback(null, true);
       }
       return callback(new Error("CORS not allowed"));

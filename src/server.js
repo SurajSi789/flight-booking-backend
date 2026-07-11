@@ -7,6 +7,7 @@ const app = require("./app");
 const { env } = require("./config/env");
 const { connectDB, disconnectDB, logger } = require("./config/db");
 const { connectRedis, disconnectRedis } = require("./config/redis");
+const User = require("./models/User");
 
 require("./jobs/emailJob");
 require("./jobs/notificationJob");
@@ -39,6 +40,14 @@ const shutdown = async (signal) => {
 
 const bootstrap = async () => {
   await connectDB();
+
+  // autoIndex is off, so ensure the User TTL index (auto-purge of abandoned
+  // unverified signups) exists. Non-fatal — a failure here shouldn't block boot.
+  try {
+    await User.ensureUserIndexes();
+  } catch (error) {
+    logger.warn("Failed to ensure User indexes", { error: error.message });
+  }
 
   // Bind the HTTP port first so Render/health-checks see the server immediately.
   // Redis connects in the background — ioredis retries automatically.

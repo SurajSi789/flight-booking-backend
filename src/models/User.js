@@ -70,6 +70,14 @@ const UserSchema = new mongoose.Schema(
     otpHash: { type: String, select: false },
     /** OTP expiry date-time. */
     otpExpiry: { type: Date },
+    /** Hash of the single-use email-verification magic-link token. */
+    verifyTokenHash: { type: String, select: false },
+    /**
+     * Deadline for completing email verification. Drives the OTP/link expiry
+     * countdown AND the TTL index that auto-purges abandoned signups so the
+     * email address can be reused. Cleared once the account is verified.
+     */
+    verificationExpiresAt: { type: Date },
     /** Saved traveller profiles (max 10). */
     savedTravellers: {
       type: [TravellerSchema],
@@ -96,6 +104,19 @@ const UserSchema = new mongoose.Schema(
 );
 
 UserSchema.index({ phone: 1 });
+
+// TTL index: MongoDB removes an unverified user once verificationExpiresAt passes
+// (expireAfterSeconds: 0). The partial filter means verified accounts are NEVER
+// touched even if the field lingers. autoIndex is off, so this is ensured at boot
+// via ensureUserIndexes() in server bootstrap.
+UserSchema.index(
+  { verificationExpiresAt: 1 },
+  {
+    expireAfterSeconds: 0,
+    partialFilterExpression: { isVerified: false },
+    name: "verificationExpiresAt_ttl"
+  }
+);
 
 UserSchema.pre("save", async function userPreSave(next) {
   if (!this.isModified("passwordHash")) {
@@ -132,13 +153,48 @@ UserSchema.methods.comparePassword = function comparePassword(plainPassword) {
  * @returns {string} raw OTP for delivery channel
  */
 UserSchema.methods.generateOTP = function generateOTP(ttlMinutes = 10) {
-  const rawOtp = String(Math.floor(100000 + Math.random() * 900000));
+  const rawOtp = String(crypto.randomInt(100000, 1000000)); // CSPRNG, 6 digits
   this.otpHash = crypto.createHash("sha256").update(rawOtp).digest("hex");
   this.otpExpiry = new Date(Date.now() + ttlMinutes * 60 * 1000); // miliseconds
   return rawOtp;
 };
 
+/**
+ * Issue an email-verification challenge: a 6-digit OTP AND a single-use
+ * magic-link token, both sharing one expiry window. Also stamps
+ * verificationExpiresAt so the TTL index purges the row if the user never
+ * completes verification.
+ * @param {number} ttlMinutes
+ * @returns {{ otp: string, token: string }} raw values for the email channel
+ */
+UserSchema.methods.issueVerificationChallenge = function issueVerificationChallenge(ttlMinutes = 15) {
+  const expiry = new Date(Date.now() + ttlMinutes * 60 * 1000);
+  const rawOtp = String(crypto.randomInt(100000, 1000000)); // CSPRNG, 6 digits
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  this.otpHash = crypto.createHash("sha256").update(rawOtp).digest("hex");
+  this.verifyTokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  this.otpExpiry = expiry;
+  this.verificationExpiresAt = expiry;
+  return { otp: rawOtp, token: rawToken };
+};
+
+/** Clear all verification challenge state once the account is verified. */
+UserSchema.methods.clearVerificationChallenge = function clearVerificationChallenge() {
+  this.otpHash = undefined;
+  this.otpExpiry = undefined;
+  this.verifyTokenHash = undefined;
+  this.verificationExpiresAt = undefined;
+};
+
 const User = mongoose.model("User", UserSchema);
+
+/**
+ * Ensure the User collection's indexes exist. Called at boot because the app
+ * runs with autoIndex disabled. Idempotent — a no-op when indexes already match.
+ */
+User.ensureUserIndexes = async function ensureUserIndexes() {
+  await User.createIndexes();
+};
 
 module.exports = User;
 module.exports.User = User;
