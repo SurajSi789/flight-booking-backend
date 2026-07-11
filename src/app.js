@@ -30,8 +30,10 @@ const app = express();
 // from X-Forwarded-For instead of seeing the internal proxy address.
 app.set("trust proxy", 1);
 
+// HTTP access logs: local development only (silent on stage/production).
 const morganLogger = winston.createLogger({
   level: "info",
+  silent: env.nodeEnv !== "development" && process.env.LOG_LEVEL !== "info",
   format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
   transports: [new winston.transports.Console()]
 });

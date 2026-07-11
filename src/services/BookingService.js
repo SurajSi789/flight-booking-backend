@@ -188,17 +188,64 @@ class BookingService {
 
     if (provider === "indigo") {
       try {
-        const hostToken = providerMeta.hostToken || (await adapter.getSessionToken()).token || providerMeta?.providerMeta?.hostToken;
-        const airSegments = [
-          {
-            key: providerMeta.segmentRef || "SEG1",
-            flightNo: providerMeta.flightNo || flightId,
-            origin: providerMeta.origin || "NA",
-            destination: providerMeta.destination || "NA",
-            departureAt: providerMeta.departureAt || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
-            arrivalAt: providerMeta.arrivalAt || new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString()
+        // IndiGo/ACH host sessions from browse-time search expire or stop matching by booking
+        // time (uAPI 14022). Re-run LowFareSearch NOW so the host token, segment, and
+        // ClassOfService all come from ONE fresh, consistent session.
+        let effectiveMeta = providerMeta;
+        const target = (providerMeta.bookingSegments || [])[0];
+        if (target?.origin && target?.destination && target?.departureAt) {
+          try {
+            const fresh = await adapter.searchFlights({
+              origin: target.origin,
+              destination: target.destination,
+              date: String(target.departureAt).slice(0, 10),
+              passengers: passengers.length || 1
+            });
+            const freshList = Array.isArray(fresh) ? fresh : (fresh?.flights || []);
+            const match = freshList.find((f) => {
+              const s = (f.providerMeta?.bookingSegments || [])[0];
+              return s && String(s.flightNumber) === String(target.flightNumber)
+                && String(s.departureAt).slice(0, 16) === String(target.departureAt).slice(0, 16);
+            });
+            if (match?.providerMeta?.bookingSegments?.length) {
+              effectiveMeta = match.providerMeta;
+              logger.info("[BookingService] IndiGo re-search matched a fresh session", { bookingId: String(bookingId), flightNumber: target.flightNumber });
+            } else {
+              logger.warn("[BookingService] IndiGo re-search found no matching flight — using stale session", { bookingId: String(bookingId), flightNumber: target.flightNumber });
+            }
+          } catch (reErr) {
+            logger.warn("[BookingService] IndiGo re-search failed — using stale session", { bookingId: String(bookingId), message: reErr.message });
           }
-        ];
+        }
+
+        const hostToken = effectiveMeta.hostToken || (await adapter.getSessionToken()).token || providerMeta?.providerMeta?.hostToken;
+        // Echo the real AirSegments captured at search time (origin/destination/times/class/
+        // hostTokenRef). Falling back to "NA" placeholders makes the uAPI AirPrice reject the request.
+        const airSegments = (Array.isArray(effectiveMeta.bookingSegments) && effectiveMeta.bookingSegments.length)
+          ? effectiveMeta.bookingSegments.map((s) => ({
+              key: s.key,
+              flightNumber: s.flightNumber,
+              flightNo: s.flightNumber,
+              origin: s.origin,
+              destination: s.destination,
+              departureAt: s.departureAt,
+              arrivalAt: s.arrivalAt,
+              classOfService: s.classOfService,
+              hostTokenRef: s.hostTokenRef,
+              providerCode: s.providerCode || "ACH",
+              group: s.group || "0",
+              xml: s.xml
+            }))
+          : [
+              {
+                key: providerMeta.segmentRef || "SEG1",
+                flightNo: providerMeta.flightNo || flightId,
+                origin: providerMeta.origin || "NA",
+                destination: providerMeta.destination || "NA",
+                departureAt: providerMeta.departureAt || new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+                arrivalAt: providerMeta.arrivalAt || new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString()
+              }
+            ];
         const optionalServices = this.normalizeAncillaries(ancillaries).map((item) => ({
           type: item.type,
           code: item.ssrCode || item.code,
@@ -208,18 +255,22 @@ class BookingService {
         const priceReqXml = IndigoAdapter.buildAirPriceReqWithOptionals({
           airSegment: airSegments,
           hostToken,
+          hostTokenKey: effectiveMeta.hostTokenKey,
           passengers,
           optionalServices,
           seatSelections: seatPreferences || [],
-          fareBasisCode: providerMeta.fareBasis || "X"
+          fareBasisCode: effectiveMeta.fareBasis || "X"
         });
         const priceResponseXml = await adapter.postSoap(priceReqXml);
         const parsed = IndigoAdapter.parseAirPriceResponse(priceResponseXml);
-        if (!parsed.pricingSolution) {
-          logger.error(`[BookingService] IndiGo AirPrice returned no pricingSolution at initiate`, {
+        // parseAirPriceResponse always returns a pricingSolution object; the real signal of
+        // success is the raw AirPricingSolution XML (needed to book). Log the response if absent.
+        if (!parsed.pricingSolution?.xml) {
+          logger.error(`[BookingService] IndiGo AirPrice returned no AirPricingSolution at initiate`, {
             bookingId: String(bookingId),
             provider: "indigo",
-            priceResponseSnippet: String(priceResponseXml || "").slice(0, 4000),
+            requestSnippet: String(priceReqXml || "").slice(0, 4000),
+            priceResponseSnippet: String(priceResponseXml || "").slice(0, 6000),
           });
         }
         return {

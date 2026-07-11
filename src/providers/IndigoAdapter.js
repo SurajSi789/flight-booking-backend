@@ -214,7 +214,7 @@ const validateFareRestrictions = ({
 };
 
 const buildSoapEnvelope = (innerXml) => `<?xml version="1.0" encoding="UTF-8"?>
-<soapenv:Envelope xmlns:soapenv="${NS.soapenv}" xmlns:air="${NS.air}" xmlns:com="${NS.com}" xmlns:univ="${NS.univ}">
+<soapenv:Envelope xmlns:soapenv="${NS.soapenv}" xmlns:air="${NS.air}" xmlns:com="${NS.com}" xmlns:univ="${NS.univ}" xmlns:common_v52_0="${NS.com}" xmlns:air_v52_0="${NS.air}" xmlns:universal_v52_0="${NS.univ}">
   <soapenv:Header/>
   <soapenv:Body>${innerXml}</soapenv:Body>
 </soapenv:Envelope>`;
@@ -265,6 +265,7 @@ const buildLowFareSearchReq = ({
 const buildAirPriceReq = ({
   airSegment,
   hostToken,
+  hostTokenKey,
   passengers,
   fareBasisCode,
   targetBranch,
@@ -291,55 +292,88 @@ const buildAirPriceReq = ({
     throw new Error("Invalid GST number format");
   }
 
+  const rbd = String(fareBasisCode || "").charAt(0) || "X";
   const segments = Array.isArray(airSegment) ? airSegment : [airSegment];
+  const htKey = hostTokenKey || segments[0]?.hostTokenRef || extractAttribute(hostToken, "Key") || "HT1";
+
+  // Prefer echoing the raw <air:AirSegment> XML captured at search — the host session stored
+  // those exact flight details, and any divergence triggers uAPI 14022 "flight details mismatch".
+  // We only ensure HostTokenRef is present (search segments may omit it). Fall back to a
+  // reconstructed segment when no raw XML was captured.
   const segmentXml = segments
     .map((segment) => {
+      if (segment.xml) {
+        let segXml = segment.xml;
+        // Strip response-only child elements that are invalid in an AirPriceReq
+        // ("FlightDetailsRef … not valid in this type of request"). Keep CodeshareInfo.
+        segXml = segXml
+          .replace(/<(?:\w+:)?FlightDetailsRef\b[^>]*\/>/g, "")
+          .replace(/<(?:\w+:)?AirAvailInfo\b[^>]*\/>/g, "");
+        const htRef = segment.hostTokenRef || htKey;
+        // Ensure the request-required attributes are present (they live on child elements in
+        // the search response, which we stripped above, so add them to the AirSegment tag).
+        const addAttr = (xml, name, value) =>
+          value && !new RegExp(`\\b${name}=`).test(xml)
+            ? xml.replace(/<(\w+:)?AirSegment\b/, (m) => `${m} ${name}="${escapeXml(value)}"`)
+            : xml;
+        segXml = addAttr(segXml, "HostTokenRef", htRef);
+        segXml = addAttr(segXml, "ProviderCode", segment.providerCode || "ACH");
+        // ClassOfService is required (uAPI 1001). Its value must match what the host session
+        // stored — which is why the segment + hostToken + class must all come from ONE fresh
+        // search session (see re-search-at-initiate in BookingService.buildProviderInitiation).
+        segXml = addAttr(segXml, "ClassOfService", segment.classOfService);
+        return segXml;
+      }
       const key = segment.key || segment.segmentRef || segment.airSegmentRef || `SEG-${crypto.randomUUID()}`;
-      return `<air:AirSegment Key="${escapeXml(key)}" Group="0" Carrier="6E" FlightNumber="${escapeXml(
+      return `<air:AirSegment Key="${escapeXml(key)}" Group="${escapeXml(segment.group || "0")}" Carrier="6E" FlightNumber="${escapeXml(
         segment.flightNumber || segment.flightNo || "0"
       )}" Origin="${escapeXml(segment.origin)}" Destination="${escapeXml(segment.destination)}" DepartureTime="${escapeXml(
         segment.departureAt
-      )}" ArrivalTime="${escapeXml(segment.arrivalAt)}"/>`;
+      )}" ArrivalTime="${escapeXml(segment.arrivalAt)}" ClassOfService="${escapeXml(
+        segment.classOfService || rbd
+      )}" ProviderCode="${escapeXml(segment.providerCode || "ACH")}" SupplierCode="6E" HostTokenRef="${escapeXml(
+        segment.hostTokenRef || htKey
+      )}"/>`;
     })
     .join("");
 
-  const passengerTypeXml = pax.map((item) => `<air:PassengerType Code="${escapeXml(item.type)}"/>`).join("");
-  const pricingModifiers = `
-  <air:AirPricingModifiers>
-    <air:BrandModifiers>
-      <air:BrandModifier ModifierType="FareFamilyDisplay"/>
-      <air:BrandModifier ModifierType="FareFamily"/>
-    </air:BrandModifiers>
-    ${fareBasisCode ? `<air:PermittedBookingCodes><air:BookingCode Code="${escapeXml(fareBasisCode)}"/></air:PermittedBookingCodes>` : ""}
-  </air:AirPricingModifiers>`;
+  const firstSegRef = segments[0].key || segments[0].segmentRef || segments[0].airSegmentRef || "SEG1";
 
-  const gstSsrXml = gstData
-    ? `
-  <air:OptionalServices>
-    <air:OptionalService Type="SSR" ProviderDefinedType="GSTN">
-      <air:ServiceData>GST COMPANY:${escapeXml(gstData.companyName || "")}</air:ServiceData>
-      <air:ServiceData>GST ID:${escapeXml(gstData.taxId || "")}</air:ServiceData>
-    </air:OptionalService>
-    <air:OptionalService Type="SSR" ProviderDefinedType="GSTN">
-      <air:ServiceData>GST EMAIL:${escapeXml(gstData.email || "")}</air:ServiceData>
-    </air:OptionalService>
-  </air:OptionalServices>`
-    : "";
+  // uAPI AirPriceReq expects com:SearchPassenger (with Age + refs), not air:PassengerType.
+  const passengerXml = pax
+    .map((item, idx) => {
+      const age = item.age != null
+        ? item.age
+        : (item.dob ? Math.max(0, new Date(travelDate).getFullYear() - new Date(item.dob).getFullYear()) : null);
+      return `<com:SearchPassenger Code="${escapeXml(item.type)}"${
+        age != null ? ` Age="${escapeXml(age)}"` : ""
+      } BookingTravelerRef="BT${idx + 1}" Key="PAX${idx + 1}"/>`;
+    })
+    .join("");
 
   return buildSoapEnvelope(`
 <air:AirPriceReq TargetBranch="${escapeXml(
     targetBranch || env.providers.indigo.targetBranch
-  )}" TraceId="${escapeXml(traceId || crypto.randomUUID())}">
+  )}" AuthorizedBy="SkyBook" TraceId="${escapeXml(traceId || crypto.randomUUID())}">
   <com:BillingPointOfSaleInfo OriginApplication="UAPI"/>
-  ${segmentXml}
-  ${passengerTypeXml}
-  ${pricingModifiers}
-  <com:HostToken Key="${escapeXml(extractAttribute(hostToken, "Key") || "HT1")}">${escapeXml(hostToken)}</com:HostToken>
-  <air:AirPricingCommand/>
-  <air:FormOfPayment Type="AgencyPayment">
-    <com:AgencyBillingIdentifier>${escapeXml(process.env.AGENCY_BILLING_IDENTIFIER || "AGENCY-BILLING-ID")}</com:AgencyBillingIdentifier>
-  </air:FormOfPayment>
-  ${gstSsrXml}
+  <air:AirItinerary>
+    ${segmentXml}
+    <com:HostToken Key="${escapeXml(htKey)}">${escapeXml(hostToken)}</com:HostToken>
+  </air:AirItinerary>
+  <air:AirPricingModifiers>
+    <air:BrandModifiers>
+      <air:FareFamilyDisplay ModifierType="FareFamily"/>
+    </air:BrandModifiers>
+  </air:AirPricingModifiers>
+  ${passengerXml}
+  <air:AirPricingCommand>
+    <air:AirSegmentPricingModifiers AirSegmentRef="${escapeXml(firstSegRef)}"${
+    fareBasisCode ? ` FareBasisCode="${escapeXml(fareBasisCode)}"` : ""
+  }/>
+  </air:AirPricingCommand>
+  <com:FormOfPayment Type="AgencyPayment">
+    <com:AgencyPayment AgencyBillingIdentifier="${escapeXml(process.env.AGENCY_BILLING_IDENTIFIER || "AGENCY-BILLING-ID")}"/>
+  </com:FormOfPayment>
 </air:AirPriceReq>`);
 };
 
@@ -385,6 +419,7 @@ const buildSeatMapReq = ({ airSegment, hostToken, hostTokenKey = "HT1", traveler
 const buildAirPriceReqWithOptionals = ({
   airSegment,
   hostToken,
+  hostTokenKey,
   passengers,
   optionalServices,
   seatSelections,
@@ -395,6 +430,7 @@ const buildAirPriceReqWithOptionals = ({
   const base = buildAirPriceReq({
     airSegment,
     hostToken,
+    hostTokenKey,
     passengers,
     fareBasisCode,
     targetBranch,
@@ -446,13 +482,13 @@ const buildAirPriceReqWithOptionals = ({
     })
     .join("");
 
-  const optionalsXml = `
-  <air:OptionalServices>
-    ${serviceXml}
-    ${seatXml}
-  </air:OptionalServices>`;
+  // Nothing selected → return the base request unchanged (an empty OptionalServices block
+  // in the wrong position breaks the schema).
+  if (!serviceXml.trim() && !seatXml.trim()) return base;
 
-  return base.replace("</air:AirPriceReq>", `${optionalsXml}</air:AirPriceReq>`);
+  // OptionalServices must precede FormOfPayment in the AirPriceReq sequence.
+  const optionalsXml = `<air:OptionalServices>${serviceXml}${seatXml}</air:OptionalServices>\n  `;
+  return base.replace("<com:FormOfPayment", `${optionalsXml}<com:FormOfPayment`);
 };
 
 const trimName = (name, maxChars) => String(name || "").slice(0, maxChars);
@@ -468,12 +504,16 @@ const buildAirCreateReservationReq = ({
   const isCodeShareTk = JSON.stringify(pricingSolution || {}).includes('"Carrier":"TK"');
   const maxNameChars = isCodeShareTk ? 26 : 32;
 
+  // The BookingTraveler Key must equal the BookingTravelerRef the priced solution uses
+  // (assigned by AirPrice), otherwise uAPI 3003 "key reference not found inside PassengerType".
+  const travelerKeys = pricingSolution?.bookingTravelerRefs || [];
+
   const travelerXml = (travelers || [])
     .map((traveler, idx) => {
       if (!traveler.address?.street || !traveler.address?.city || !traveler.address?.state || !traveler.address?.postalCode || !traveler.address?.country) {
         throw new Error("Address fields Street, City, State, PostalCode, Country are required");
       }
-      return `<com:BookingTraveler Key="${escapeXml(traveler.key || `BT${idx + 1}`)}" DOB="${escapeXml(
+      return `<com:BookingTraveler Key="${escapeXml(travelerKeys[idx] || traveler.key || `BT${idx + 1}`)}" DOB="${escapeXml(
         new Date(traveler.dob).toISOString().slice(0, 10)
       )}">
   <com:BookingTravelerName Prefix="${escapeXml(traveler.prefix || "MR")}" First="${escapeXml(
@@ -494,35 +534,41 @@ const buildAirCreateReservationReq = ({
     })
     .join("");
 
-  const optionalServicesXml = (optionalServices || [])
-    .map(
-      (service) =>
-        `<air:OptionalService Type="${escapeXml(service.type || "Other")}" ProviderDefinedType="${escapeXml(
-          service.code || ""
-        )}" BookingTravelerRef="${escapeXml(service.passengerRef || "")}" AirSegmentRef="${escapeXml(
-          service.segmentRef || ""
-        )}"/>`
-    )
-    .join("");
+  // The priced solution (echoed verbatim from the AirPrice response) already contains the
+  // OptionalServices with ServiceStatus="Priced", so they are NOT added separately here.
+  if (!pricingSolution?.xml) {
+    throw new Error("IndiGo AirCreateReservation: raw AirPricingSolution XML missing from priced solution — re-run AirPrice");
+  }
+  // The solution references AirSegments (<air:AirSegmentRef Key="…"/>), but the book request
+  // needs the full <air:AirSegment> inlined. Only the refs that are DIRECT children of
+  // AirPricingSolution (i.e. before the first AirPricingInfo) must be inlined — refs nested
+  // inside AirPricingInfo/BrandingInfo must stay as refs (else they break those elements).
+  const segMap = pricingSolution.airSegmentsXml || {};
+  const inlineSegmentRef = (m, key) => {
+    const seg = segMap[key];
+    if (!seg) return m;
+    return seg
+      .replace(/<(?:\w+:)?FlightDetailsRef\b[^>]*\/>/g, "")
+      .replace(/<(?:\w+:)?AirAvailInfo\b[^>]*\/>/g, "");
+  };
+  const refRe = /<(?:\w+:)?AirSegmentRef\b[^>]*\bKey="([^"]+)"[^>]*\/>/g;
+  const rawSolution = pricingSolution.xml;
+  const splitIdx = rawSolution.search(/<(?:\w+:)?AirPricingInfo\b/);
+  const pricingSolutionXml = splitIdx < 0
+    ? rawSolution.replace(refRe, inlineSegmentRef)
+    : rawSolution.slice(0, splitIdx).replace(refRe, inlineSegmentRef) + rawSolution.slice(splitIdx);
 
-  const fopXml = formOfPayment
-    ? `<air:FormOfPayment Type="${escapeXml(formOfPayment.type || "AgencyPayment")}">
-  <com:CreditCard Type="${escapeXml(formOfPayment.cardType || "")}" Number="${escapeXml(
-      formOfPayment.cardNumber || ""
-    )}" ExpDate="${escapeXml(formOfPayment.expiry || "")}" CVV="${escapeXml(formOfPayment.cvv || "")}"/>
-</air:FormOfPayment>`
-    : "";
-
+  // Element order per the IndiGo uAPI guide: BillingPointOfSaleInfo → BookingTraveler(s) →
+  // AirPricingSolution (echoed) → ActionStatus (COMMON namespace; last element). No
+  // FormOfPayment — IndiGo/ACH tickets immediately via ActionStatus TicketDate="T*".
   return buildSoapEnvelope(`
 <univ:AirCreateReservationReq TargetBranch="${escapeXml(
     targetBranch || env.providers.indigo.targetBranch
-  )}" TraceId="${escapeXml(traceId || crypto.randomUUID())}">
+  )}" AuthorizedBy="SkyBook" TraceId="${escapeXml(traceId || crypto.randomUUID())}">
   <com:BillingPointOfSaleInfo OriginApplication="UAPI"/>
   ${travelerXml}
-  <air:AirPricingSolution>${escapeXml(JSON.stringify(pricingSolution || {}))}</air:AirPricingSolution>
-  ${optionalServicesXml ? `<air:OptionalServices>${optionalServicesXml}</air:OptionalServices>` : ""}
-  <univ:ActionStatus Type="ACTIVE" TicketDate="T*" ProviderCode="ACH"/>
-  ${fopXml}
+  ${pricingSolutionXml}
+  <com:ActionStatus Type="ACTIVE" TicketDate="T*" ProviderCode="ACH"/>
 </univ:AirCreateReservationReq>`);
 };
 
@@ -547,7 +593,21 @@ const parseLowFareSearchResponse = (xmlStr) => {
       departureAt: attrs.DepartureTime || null,
       arrivalAt: attrs.ArrivalTime || null,
       equipment: attrs.Equipment || null,
-      flightTime: attrs.FlightTime ? Number(attrs.FlightTime) : null
+      flightTime: attrs.FlightTime ? Number(attrs.FlightTime) : null,
+      // Real marketing carrier (6E, AI, …) and the operating carrier from CodeshareInfo, if any.
+      // uAPI returns mixed-carrier content — never assume 6E.
+      operatingCarrier: (() => {
+        const cs = extractFirstBlock(segmentMatch[0], "CodeshareInfo");
+        return cs ? (parseAttributes(cs[1]).OperatingCarrier || null) : null;
+      })(),
+      // Needed verbatim by the AirPrice/AirBook AirSegment echo.
+      classOfService: attrs.ClassOfService || null,
+      hostTokenRef: attrs.HostTokenRef || null,
+      providerCode: attrs.ProviderCode || "ACH",
+      group: attrs.Group || "0",
+      // Raw <air:AirSegment …/> XML — echoed verbatim so the host session's stored flight
+      // details match exactly (partial/reconstructed segments trigger uAPI 14022 mismatch).
+      xml: segmentMatch[0]
     };
   }
 
@@ -675,13 +735,35 @@ const parseAirPriceResponse = (xmlStr) => {
   const hostBlock = extractFirstBlock(xmlStr, "HostToken");
   const hostToken = hostBlock ? hostBlock[2].trim() : null;
 
+  // The AirPricingSolution references AirSegments by key (<air:AirSegmentRef Key="…"/>), but the
+  // book request needs the full <air:AirSegment> inlined. Capture the response's segments by key.
+  const airSegmentsXml = {};
+  for (const m of extractAllBlocks(xmlStr, "AirSegment")) {
+    const a = parseAttributes(m[1]);
+    if (a.Key) airSegmentsXml[a.Key] = m[0];
+  }
+
+  // AirPrice assigns BookingTraveler keys, referenced by <air:PassengerType BookingTravelerRef="…"/>
+  // in the priced solution. Our AirBook BookingTraveler keys MUST match these (else uAPI 3003).
+  const bookingTravelerRefs = [];
+  const seenRefs = new Set();
+  for (const m of extractAllBlocks(xmlStr, "PassengerType")) {
+    const ref = parseAttributes(m[1]).BookingTravelerRef;
+    if (ref && !seenRefs.has(ref)) { seenRefs.add(ref); bookingTravelerRefs.push(ref); }
+  }
+
   return {
     pricingSolution: {
       key: pricingAttrs.Key || null,
       total: pricingAttrs.TotalPrice || null,
       base: pricingAttrs.BasePrice || null,
       taxes: pricingAttrs.Taxes || null,
-      services: pricingAttrs.OptionalServicesTotal || null
+      services: pricingAttrs.OptionalServicesTotal || null,
+      // Raw <air:AirPricingSolution>…</air:AirPricingSolution> XML echoed verbatim into
+      // AirCreateReservationReq — uAPI requires the priced solution structure, not a summary.
+      xml: pricingSolutionBlock ? pricingSolutionBlock[0] : null,
+      airSegmentsXml,
+      bookingTravelerRefs
     },
     optionalServices,
     hostToken
@@ -802,7 +884,8 @@ class IndigoAdapter extends BaseFlightProvider {
             resolvedSegs[bi.segmentRef] = {
               ...seg,
               bookingCode: bi.bookingCode,
-              bookingCount: bi.bookingCount
+              bookingCount: bi.bookingCount,
+              hostTokenRef: bi.hostTokenRef || seg.hostTokenRef || firstBi.hostTokenRef || null
             };
           }
         }
@@ -846,21 +929,42 @@ class IndigoAdapter extends BaseFlightProvider {
           const depAt = first.departureAt || `${date}T07:00:00.000Z`;
           const arrAt = last.arrivalAt || `${date}T09:00:00.000Z`;
 
-          const segments = chain.map((seg) => ({
-            flightNo: `6E-${seg.flightNumber}`,
-            origin: seg.origin,
-            destination: seg.destination,
-            departureAt: seg.departureAt,
-            arrivalAt: seg.arrivalAt,
-            durationMins: seg.flightTime || null,
-            bookingCode: seg.bookingCode || null
-          }));
+          const segments = chain.map((seg) => {
+            const carrier = seg.carrier || "6E";
+            return {
+              flightNo: `${carrier}-${seg.flightNumber}`,
+              carrier,
+              carrierCode: carrier,
+              operatingCarrier: seg.operatingCarrier || carrier,
+              origin: seg.origin,
+              destination: seg.destination,
+              departureAt: seg.departureAt,
+              arrivalAt: seg.arrivalAt,
+              durationMins: seg.flightTime || null,
+              bookingCode: seg.bookingCode || null
+            };
+          });
+
+          // Marketing carriers actually present across the itinerary (e.g. ["6E","AI"]).
+          const itineraryCarriers = [...new Set(segments.map((s) => s.carrier))];
+
+          // TEMP: the uAPI (ACH) booking flow only supports IndiGo (6E). Other carriers
+          // (Air India etc.) are returned by this uAPI search too, but can't be booked via
+          // ACH — they come through Travelport instead. Skip any itinerary that isn't
+          // all-6E so users never land on an unbookable option.
+          //
+          // TODO: remove this filter once carrier-based booking routing is implemented
+          // (6E → uAPI/ACH, everything else → Travelport), to offer all uAPI carriers.
+          if (itineraryCarriers.some((c) => c !== "6E")) continue;
 
           allFlights.push(
             this.buildFlightResult({
               flightId: `IND-${point.key || flightIdx}-${flightIdx}`,
               provider: "indigo",
-              flightNo: `6E-${first.flightNumber}`,
+              // Real marketing carrier of the first leg (uAPI returns 6E, AI, …). For mixed-carrier
+              // itineraries the per-segment carriers in `segments` drive the correct display.
+              flightNo: `${first.carrier || "6E"}-${first.flightNumber}`,
+              carrierCode: first.carrier || "6E",
               origin: first.origin,
               destination: last.destination,
               departureAt: depAt,
@@ -881,9 +985,29 @@ class IndigoAdapter extends BaseFlightProvider {
               ancillaries: ["meal", "baggage", "seat"],
               providerMeta: {
                 hostToken,
+                hostTokenKey: first.hostTokenRef || firstBi.hostTokenRef || null,
                 airPricePointKey: point.key,
                 segmentRef: first.key,
-                allSegmentRefs: chain.map((s) => s.key)
+                allSegmentRefs: chain.map((s) => s.key),
+                fareBasis: fare.fareBasis || "",
+                // Marketing carriers present in this itinerary (e.g. ["6E"] or ["6E","AI"]).
+                itineraryCarriers,
+                // Full AirSegment data echoed verbatim into the AirPrice/AirBook request.
+                bookingSegments: chain.map((s) => ({
+                  key: s.key,
+                  carrier: s.carrier || null,
+                  operatingCarrier: s.operatingCarrier || s.carrier || null,
+                  flightNumber: s.flightNumber,
+                  origin: s.origin,
+                  destination: s.destination,
+                  departureAt: s.departureAt,
+                  arrivalAt: s.arrivalAt,
+                  classOfService: s.bookingCode || s.classOfService || null,
+                  hostTokenRef: s.hostTokenRef || first.hostTokenRef || firstBi.hostTokenRef || null,
+                  providerCode: s.providerCode || "ACH",
+                  group: s.group || "0",
+                  xml: s.xml || null
+                }))
               }
             })
           );
@@ -970,6 +1094,10 @@ class IndigoAdapter extends BaseFlightProvider {
         pricingSolution,
         optionalServices,
         formOfPayment
+      });
+      logger.info("[IndigoAdapter] AirCreateReservation request", {
+        hasPricingSolutionXml: Boolean(pricingSolution?.xml),
+        requestXmlSnippet: String(xml || "").slice(0, 6000),
       });
       const responseXml = await this.postSoap(xml);
       const parsed = parseAirBookResponse(responseXml);
