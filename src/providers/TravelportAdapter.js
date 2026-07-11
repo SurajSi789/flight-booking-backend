@@ -24,6 +24,7 @@ const ticketingSvc               = require("../services/travelport/ticketing.ser
 const { getReservation, cancelReservation } = require("../services/travelport/reservation.service");
 const { getSeatMap, getAncillaries }        = require("../services/travelport/ancillary.service");
 const { exchangeBooking }                   = require("../services/travelport/exchange.service");
+const { logger }                            = require("../config/db");
 
 class TravelportAdapter extends BaseFlightProvider {
   constructor() {
@@ -59,9 +60,34 @@ class TravelportAdapter extends BaseFlightProvider {
 
   async priceAndInitiate(providerMeta, contentSource = "GDS") {
     const priced = await pricingSvc.priceOffer(providerMeta, contentSource);
+
+    // The GDS booking (BuildFromProducts) rebuilds the offer in the workbench from the
+    // ORIGINAL search identifiers, which the booking layer reads under these exact keys:
+    //   catalogProductOfferingsIdentifier ← search session UUID (sessionId)
+    //   catalogProductOfferingIdentifier  ← specific offering (offeringId)
+    //   productIdentifier                 ← product (productId)
+    const catalogProductOfferingsIdentifier =
+      providerMeta.sessionId || providerMeta.transactionId || providerMeta.catalogProductOfferingsIdentifier;
+    const catalogProductOfferingIdentifier =
+      providerMeta.offeringId || providerMeta.catalogProductOfferingIdentifier;
+    const productIdentifier =
+      priced.productId || priced.productIdentifier || providerMeta.productId || providerMeta.productIdentifier;
+
+    if (!catalogProductOfferingsIdentifier || !catalogProductOfferingIdentifier || !productIdentifier) {
+      logger.warn("[TravelportAdapter] priceAndInitiate: missing booking identifier(s)", {
+        catalogProductOfferingsIdentifier,
+        catalogProductOfferingIdentifier,
+        productIdentifier,
+      });
+    }
+
     return {
       priceOfferMeta: {
-        // Preserve session identifiers from search (needed for booking workbench)
+        // Canonical names read by the booking layer (buildGdsOfferBody / createBooking guard)
+        catalogProductOfferingsIdentifier,
+        catalogProductOfferingIdentifier,
+        productIdentifier,
+        // Preserve session identifiers from search (used by seat-map / ancillary calls)
         sessionId:  providerMeta.sessionId  || providerMeta.transactionId,
         offeringId: providerMeta.offeringId,
         productId:  priced.productId || priced.productIdentifier || providerMeta.productId,
@@ -91,7 +117,7 @@ class TravelportAdapter extends BaseFlightProvider {
   //                        productIdentifier, offerId, offerIdentifier, totalFare, currency },
   //     contentSource }
 
-  async confirmBooking({ passengers, priceOfferMeta, contentSource = "GDS" }) {
+  async confirmBooking({ passengers, priceOfferMeta, contentSource = "GDS", contact = {} }) {
     if (!priceOfferMeta) {
       throw new Error("TravelportAdapter.confirmBooking: priceOfferMeta is required (run priceAndInitiate first)");
     }
@@ -103,6 +129,7 @@ class TravelportAdapter extends BaseFlightProvider {
       passengers,
       pricedOffer: priceOfferMeta,
       contentSource: contentSource || "GDS",
+      contact,
     });
 
     return {

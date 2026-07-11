@@ -7,6 +7,7 @@ const PaymentService = require("../services/PaymentService");
 const EmailService = require("../services/EmailService");
 const { getBullQueueOptions } = require("../config/redis");
 const { env } = require("../config/env");
+const { logger } = require("../config/db");
 
 const webhookQueue = new Queue("payment-webhook-queue", getBullQueueOptions());
 
@@ -21,7 +22,19 @@ webhookQueue.process("process-event", async (job) => {
       paymentId: paymentEntity.id,
       payload
     });
-    await BookingService.confirmBooking(transaction.bookingId);
+    // Ticketing can fail post-payment; the failure is already recorded on the booking
+    // (confirmError) and logged. Swallow here so a permanent provider failure does not
+    // cause the webhook job to retry endlessly. A no-op if the sync /confirm already ran.
+    try {
+      await BookingService.confirmBooking(transaction.bookingId);
+    } catch (err) {
+      logger.error("[PaymentWebhook] confirmBooking failed after payment.captured", {
+        bookingId: String(transaction.bookingId),
+        orderId: paymentEntity.order_id,
+        paymentId: paymentEntity.id,
+        message: err.message,
+      });
+    }
     return;
   }
 

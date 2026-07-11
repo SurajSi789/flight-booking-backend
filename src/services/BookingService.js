@@ -15,6 +15,7 @@ const { createRedisClient, getBullQueueOptions } = require("../config/redis");
 const { emailQueue } = require("../jobs/emailJob");
 const { whatsappQueue } = require("../jobs/whatsappJob");
 const PaymentService = require("./PaymentService");
+const { logger } = require("../config/db");
 
 const redis = createRedisClient();
 const bookingEmailQueue = emailQueue || new Queue("email-queue", getBullQueueOptions());
@@ -214,6 +215,13 @@ class BookingService {
         });
         const priceResponseXml = await adapter.postSoap(priceReqXml);
         const parsed = IndigoAdapter.parseAirPriceResponse(priceResponseXml);
+        if (!parsed.pricingSolution) {
+          logger.error(`[BookingService] IndiGo AirPrice returned no pricingSolution at initiate`, {
+            bookingId: String(bookingId),
+            provider: "indigo",
+            priceResponseSnippet: String(priceResponseXml || "").slice(0, 4000),
+          });
+        }
         return {
           hostToken: parsed.hostToken || hostToken,
           pricingSolution: parsed.pricingSolution,
@@ -226,7 +234,13 @@ class BookingService {
           }
         };
       } catch (err) {
-        console.warn(`[BookingService] IndiGo provider initiation failed, using calculated fare: ${err.message}`);
+        logger.warn(`[BookingService] IndiGo pricing failed at initiate — using searched fare`, {
+          bookingId: String(bookingId),
+          provider: "indigo",
+          message: err.message,
+          responseData: err.response?.data ? String(err.response.data).slice(0, 4000) : undefined,
+          status: err.response?.status,
+        });
       }
     }
 
@@ -251,7 +265,7 @@ class BookingService {
           }
         };
       } catch (err) {
-        console.warn(`[BookingService] Air India provider initiation failed, using calculated fare: ${err.message}`);
+        logger.warn(`[BookingService] Air India pricing failed at initiate — using searched fare`, { bookingId: String(bookingId), provider: "airindia", message: err.message });
       }
     }
 
@@ -277,7 +291,7 @@ class BookingService {
           }
         };
       } catch (err) {
-        console.warn(`[BookingService] SpiceJet provider initiation failed, using calculated fare: ${err.message}`);
+        logger.warn(`[BookingService] SpiceJet pricing failed at initiate — using searched fare`, { bookingId: String(bookingId), provider: "spicejet", message: err.message });
       }
     }
 
@@ -298,7 +312,7 @@ class BookingService {
           },
         };
       } catch (err) {
-        console.warn(`[BookingService] Travelport provider initiation failed, using calculated fare: ${err.message}`);
+        logger.warn(`[BookingService] Travelport pricing failed at initiate — using searched fare`, { bookingId: String(bookingId), provider: "travelport", message: err.message });
       }
     }
 
@@ -517,6 +531,11 @@ class BookingService {
         status: "confirmed"
       };
     }
+    // Already cancelled/refunded (e.g. auto-refunded after an earlier ticketing failure)
+    // — do not attempt to ticket again.
+    if (booking.bookingStatus === "cancelled") {
+      throw new Error("Booking was cancelled/refunded and cannot be ticketed");
+    }
 
     if (!skipPaymentCheck) {
       const transaction = await Transaction.findOne({
@@ -540,6 +559,13 @@ class BookingService {
     const adapter = this.getAdapter(provider);
     let providerResponse;
 
+    logger.info("[BookingService] Starting provider ticketing (post-payment)", {
+      bookingId: booking._id.toString(),
+      bookingRef: booking.bookingRef,
+      provider,
+      hasSession: Boolean(sessionState && Object.keys(sessionState).length),
+    });
+
     try {
       if (provider === "indigo") {
         const travelers = booking.passengers.map((pax, idx) => ({
@@ -552,12 +578,20 @@ class BookingService {
           email: "support@flightbooking.test",
           address: { street: "Address Line 1", city: "City", state: "State", postalCode: "110001", country: "IN" }
         }));
+        // A live AirPrice at initiate is required to book — its pricingSolution carries the
+        // hostToken/keys IndiGo needs in AirCreateReservationReq. If it's missing, pricing
+        // failed upstream (see "[BookingService] IndiGo pricing failed at initiate" warn).
+        if (!sessionState.pricingSolution || Object.keys(sessionState.pricingSolution).length === 0) {
+          throw new Error("IndiGo pricingSolution missing from session — AirPrice failed at initiate, cannot create reservation");
+        }
         providerResponse = await adapter.confirmBooking({
           travelers,
-          pricingSolution: sessionState.pricingSolution || {},
+          pricingSolution: sessionState.pricingSolution,
           optionalServices: sessionState.optionalServices || [],
           formOfPayment: { type: "AgencyPayment" }
         });
+        // Adapter swallows exceptions into { error } — surface it instead of a generic "no PNR".
+        if (providerResponse.error) throw new Error(providerResponse.error);
       } else if (provider === "airindia") {
         const ttl = await redis.ttl(this.getSessionKey(booking._id));
         let refreshedSession = sessionState;
@@ -619,6 +653,7 @@ class BookingService {
           passengers: booking.passengers,
           priceOfferMeta,
           contentSource,
+          contact: { email: booking.contactEmail, phone: booking.contactPhone, countryCode: "91" },
         });
         // Persist the Travelport reservation identifier for later cancel/exchange/ticketing
         if (providerResponse.reservationIdentifier) {
@@ -632,16 +667,46 @@ class BookingService {
         providerResponse = await adapter.createBooking({ bookingId: booking._id.toString() });
       }
     } catch (err) {
-      console.warn(`[BookingService] ${provider} confirm failed, generating fallback PNR: ${err.message}`);
-      providerResponse = null;
+      // Post-payment provider/ticketing failure. Do NOT fabricate a PNR or mark the
+      // booking confirmed — record the failure and surface the error so it can be
+      // investigated and the captured payment refunded.
+      logger.error(`[BookingService] ${provider} ticketing failed post-payment`, {
+        bookingId: booking._id.toString(),
+        provider,
+        message: err.message,
+        stack: err.stack,
+      });
+      booking.providerMeta = {
+        ...booking.providerMeta,
+        confirmError: { message: err.message, provider, at: new Date().toISOString() },
+      };
+      await booking.save();
+      throw new Error(`Airline booking failed (${provider}): ${err.message}`);
     }
 
+    // Provider call succeeded — require a real PNR from the response (no fabrication).
     const pnr =
       providerResponse?.pnr ||
       providerResponse?.providerBookingRef ||
       providerResponse?.bookingRef ||
       providerResponse?.tcrNumber ||
-      `PNR-${Date.now()}`;
+      null;
+
+    if (!pnr) {
+      const reason = providerResponse?.error || "no PNR returned by provider";
+      logger.error(`[BookingService] ${provider} returned no PNR/booking reference`, {
+        bookingId: booking._id.toString(),
+        provider,
+        reason,
+        providerResponse,
+      });
+      booking.providerMeta = {
+        ...booking.providerMeta,
+        confirmError: { message: reason, provider, at: new Date().toISOString() },
+      };
+      await booking.save();
+      throw new Error(`Airline booking failed (${provider}): ${reason}`);
+    }
 
     booking.bookingStatus = "confirmed";
     booking.paymentStatus = "paid";
@@ -662,6 +727,13 @@ class BookingService {
       booking.tickets = providerResponse.tickets;
     }
     await booking.save();
+
+    logger.info("[BookingService] Provider ticketing succeeded", {
+      bookingId: booking._id.toString(),
+      bookingRef: booking.bookingRef,
+      provider,
+      pnr,
+    });
 
     // Side-effects: fire-and-forget — never let them abort the confirmation response
     Promise.all([

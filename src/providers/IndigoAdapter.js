@@ -2,6 +2,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const BaseFlightProvider = require("./BaseFlightProvider");
 const { env } = require("../config/env");
+const { logger } = require("../config/db");
 
 const NS = {
   soapenv: "http://schemas.xmlsoap.org/soap/envelope/",
@@ -971,8 +972,22 @@ class IndigoAdapter extends BaseFlightProvider {
         formOfPayment
       });
       const responseXml = await this.postSoap(xml);
-      return { provider: "indigo", ...parseAirBookResponse(responseXml) };
+      const parsed = parseAirBookResponse(responseXml);
+      if (!parsed.pnr) {
+        // Booking response came back but carried no SupplierLocator — log the raw XML
+        // (truncated) so the actual IndiGo fault/warning is visible for debugging.
+        logger.error("[IndigoAdapter] AirCreateReservation returned no PNR", {
+          parsed,
+          responseXmlSnippet: String(responseXml || "").slice(0, 4000),
+        });
+      }
+      return { provider: "indigo", ...parsed };
     } catch (error) {
+      logger.error("[IndigoAdapter] confirmBooking threw", {
+        message: error.message,
+        responseData: error.response?.data ? String(error.response.data).slice(0, 4000) : undefined,
+        status: error.response?.status,
+      });
       return this.wrapError(error, 500);
     }
   }

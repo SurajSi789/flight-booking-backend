@@ -7,8 +7,53 @@ const EmailService = require("../services/EmailService");
 const WhatsAppService = require("../services/WhatsAppService");
 const { generateTicketPDFBuffer } = require("../utils/ticketPdf");
 const { env } = require("../config/env");
+const { logger } = require("../config/db");
 
 const buildResponse = (res, status, payload) => res.status(status).json(payload);
+
+// Auto-refund a booking whose payment was captured but airline ticketing failed.
+// Initiates a Razorpay refund for the charged amount, restores any wallet debit, and
+// marks the booking cancelled (no reservation exists). Never throws — refund failures
+// are logged for manual follow-up so they can't mask the original ticketing error.
+async function autoRefundFailedBooking(bookingId, reason) {
+  const result = { refunded: false };
+  try {
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return result;
+
+    // The Razorpay charge equals the post-wallet totalFare persisted at initiate time.
+    // Only refund a payment that is still "paid" — guards against a second call
+    // (e.g. webhook retry) refunding an already-refunded payment.
+    const chargedAmount = Number(booking.fareBreakdown?.totalFare || 0);
+    if (booking.paymentId && chargedAmount > 0 && booking.paymentStatus === "paid") {
+      await PaymentService.createRefund({ booking, amount: chargedAmount, reason });
+      result.refunded = true;
+      result.refundAmount = chargedAmount;
+    }
+
+    // Restore any wallet balance that was debited/held for this booking.
+    const walletDebit = Number(booking.fareBreakdown?.walletDebit || 0);
+    if (walletDebit > 0) {
+      await User.findByIdAndUpdate(booking.userId, {
+        $inc: { walletBalance: walletDebit },
+        $push: { walletTransactions: { amount: walletDebit, type: "credit", reason: `Refund — booking ${booking.bookingRef} failed`, date: new Date() } },
+      });
+      await Booking.findByIdAndUpdate(booking._id, { $set: { "fareBreakdown.walletDebit": 0 } });
+      result.walletRestored = walletDebit;
+    }
+
+    await Booking.findByIdAndUpdate(booking._id, { $set: { bookingStatus: "cancelled" } });
+    logger.info("[BookingConfirm] Auto-refund completed after ticketing failure", { bookingId: String(bookingId), ...result });
+  } catch (refundErr) {
+    logger.error("[BookingConfirm] Auto-refund FAILED — manual refund required", {
+      bookingId: String(bookingId),
+      message: refundErr.message,
+      stack: refundErr.stack,
+    });
+    result.refundError = refundErr.message;
+  }
+  return result;
+}
 
 const initiateBooking = async (req, res) => {
   try {
@@ -76,14 +121,24 @@ const initiateBooking = async (req, res) => {
 const confirmBooking = async (req, res) => {
   const { bookingId } = req.params;
   const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = req.body;
+
+  logger.info("[BookingConfirm] Received confirm request", {
+    bookingId,
+    userId: req.user?.userId,
+    razorpayOrderId,
+    razorpayPaymentId,
+  });
+
   const booking = await Booking.findById(bookingId);
   if (!booking) {
+    logger.warn("[BookingConfirm] Booking not found", { bookingId });
     return buildResponse(res, 404, { success: false, message: "Booking not found" });
   }
   if (
     booking.userId.toString() !== req.user.userId &&
     req.user.role !== "admin"
   ) {
+    logger.warn("[BookingConfirm] Not authorized", { bookingId, userId: req.user?.userId });
     return buildResponse(res, 403, { success: false, message: "Not authorized for this booking" });
   }
 
@@ -94,29 +149,63 @@ const confirmBooking = async (req, res) => {
   });
 
   if (!signatureOk) {
+    logger.warn("[BookingConfirm] Invalid Razorpay signature — aborting", { bookingId, razorpayOrderId });
     return buildResponse(res, 400, { success: false, message: "Invalid Razorpay signature" });
   }
 
-  const isMockPayment = String(razorpayPaymentId || "").startsWith("pay_MOCK");
+  // Mark payment captured (real Razorpay txn). Runs before provider ticketing so
+  // the money is always recorded against the booking even if ticketing then fails.
+  await PaymentService.markPaymentSuccess({
+    orderId: razorpayOrderId,
+    paymentId: razorpayPaymentId,
+    payload: { from: "booking_confirm" }
+  });
 
-  if (isMockPayment) {
-    // Mock gateway: no Transaction row to look up — update fields directly
-    await Booking.findByIdAndUpdate(booking._id, {
-      $set: { paymentStatus: "paid", paymentId: razorpayPaymentId }
+  // Post-payment: create the actual airline reservation (PNR). If the provider
+  // call fails we do NOT fabricate a PNR — the payment stays recorded as paid and
+  // we surface the real error so it can be investigated / refunded.
+  let confirmedBooking;
+  try {
+    confirmedBooking = await BookingService.confirmBooking({
+      bookingId: booking._id,
+      skipPaymentCheck: true,
     });
-  } else {
-    await PaymentService.markPaymentSuccess({
-      orderId: razorpayOrderId,
-      paymentId: razorpayPaymentId,
-      payload: { from: "booking_confirm" }
+  } catch (err) {
+    logger.error("[BookingConfirm] Provider ticketing FAILED after payment captured", {
+      bookingId: booking._id.toString(),
+      provider: booking.flightDetails?.provider,
+      razorpayOrderId,
+      razorpayPaymentId,
+      message: err.message,
+      stack: err.stack,
+    });
+
+    // Payment was captured but no airline reservation exists — refund automatically.
+    const refund = await autoRefundFailedBooking(booking._id, `Airline ticketing failed: ${err.message}`);
+
+    // 502: payment succeeded but the downstream airline booking did not.
+    return buildResponse(res, 502, {
+      success: false,
+      message: err.message || "Airline booking failed after payment.",
+      data: {
+        bookingRef: booking.bookingRef,
+        paymentCaptured: true,
+        refundInitiated: refund.refunded,
+        ...(refund.refundAmount   ? { refundAmount: refund.refundAmount }     : {}),
+        ...(refund.walletRestored ? { walletRestored: refund.walletRestored } : {}),
+        ...(refund.refundError    ? { refundError: refund.refundError }       : {}),
+      },
     });
   }
 
-  const confirmedBooking = await BookingService.confirmBooking({
-    bookingId: booking._id,
-    skipPaymentCheck: true,
+  // confirmBooking returns { bookingRef, pnr, status } — use pnr directly.
+  const pnr = confirmedBooking.pnr || null;
+  logger.info("[BookingConfirm] Booking confirmed with real PNR", {
+    bookingId: booking._id.toString(),
+    bookingRef: confirmedBooking.bookingRef,
+    provider: booking.flightDetails?.provider,
+    pnr,
   });
-  const pnr = confirmedBooking.pnrMap?.[confirmedBooking.flightDetails.provider] || null;
 
   return buildResponse(res, 200, {
     success: true,
@@ -125,8 +214,8 @@ const confirmBooking = async (req, res) => {
       bookingRef: confirmedBooking.bookingRef,
       pnr,
       status: "confirmed",
-      flightDetails: confirmedBooking.flightDetails,
-      ...(confirmedBooking.returnFlightDetails ? { returnFlightDetails: confirmedBooking.returnFlightDetails } : {})
+      flightDetails: booking.flightDetails,
+      ...(booking.returnFlightDetails ? { returnFlightDetails: booking.returnFlightDetails } : {})
     }
   });
 };

@@ -15,6 +15,7 @@
  */
 
 const http = require("./http.client");
+const { logger } = require("../../config/db");
 
 const WORKBENCH_INIT_PATH  = "air/book/session/reservationworkbench";
 const COMMIT_PATH_PREFIX   = "air/book/reservation/reservations";
@@ -28,14 +29,30 @@ const PAYMENT_PATH_PREFIX  = "air/paymentoffer/reservationworkbench";
 
 async function initiateWorkbench() {
   // Body signals we want a new empty workbench (ReservationID type means "create new")
-  const raw = await http.post(WORKBENCH_INIT_PATH, { "@type": "ReservationID" });
+  const { data: raw, headers, status } = await http.postFull(WORKBENCH_INIT_PATH, { "@type": "ReservationID" });
 
-  const workbenchId =
+  let workbenchId =
     raw?.ReservationWorkbench?.Identifier?.value ||
+    raw?.Reservation?.Identifier?.value ||
+    raw?.ReservationResponse?.Reservation?.Identifier?.value ||
     raw?.Identifier?.value ||
     raw?.id;
 
+  // Travelport frequently returns the workbench ID only in the Location / Content-Location
+  // header, e.g. ".../reservationworkbench/{workbenchId}", with an empty body.
   if (!workbenchId) {
+    const loc = headers?.location || headers?.["content-location"] || "";
+    const m = String(loc).match(/reservationworkbench\/([^/?#]+)/i);
+    if (m) workbenchId = m[1];
+  }
+
+  if (!workbenchId) {
+    logger.error("[Travelport] initiateWorkbench: could not extract workbench ID", {
+      status,
+      location: headers?.location || headers?.["content-location"] || null,
+      bodyType: raw && typeof raw === "object" ? Object.keys(raw) : typeof raw,
+      bodySnippet: JSON.stringify(raw || "").slice(0, 2000),
+    });
     throw new Error("Travelport booking: could not extract workbench ID from initiation response");
   }
   return workbenchId;
@@ -44,67 +61,82 @@ async function initiateWorkbench() {
 // ── Traveler builders ─────────────────────────────────────────────────────────
 
 const GENDER_MAP = { M: "Male", F: "Female", male: "Male", female: "Female" };
-const PAX_TYPE_MAP = { ADT: "Adult", CHD: "Child", INF: "InfantInLap" };
+// Travelport GDS passenger type codes: Adult=ADT, Child=CNN, Infant=INF.
+const PTC_MAP = { ADT: "ADT", CHD: "CNN", CNN: "CNN", CHILD: "CNN", INF: "INF" };
+const PREFIX_MAP = { Male: "Mr", Female: "Ms" };
 
-function buildTravelerBody(passenger, index) {
+// Travelport dates must be plain YYYY-MM-DD — never a full ISO datetime.
+function toTravelportDate(d) {
+  if (!d) return undefined;
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  return String(d).slice(0, 10); // "1999-01-01T00:00:00.000Z" → "1999-01-01"
+}
+
+// Body shape mirrors the official Travelport TripServices "Add Traveler" reference payload.
+function buildTravelerBody(passenger, index, contact = {}) {
   const { firstName, lastName, dob, gender, type = "ADT", passportNo, nationality, passportExpiry } = passenger;
-  const travelerId = `traveler_${index + 1}`;
+  const g = GENDER_MAP[gender] || GENDER_MAP[String(gender || "").toLowerCase()] || "Male";
+  const ptc = PTC_MAP[String(type).toUpperCase()] || "ADT";
+  const birthDate = toTravelportDate(dob);
 
-  const travelerBody = {
-    "@type": "TravelerCriteria",
-    Traveler: {
-      "@type": "Traveler",
-      id: travelerId,
-      passengerTypeCode: type,
-      age: dob ? calculateAge(dob) : undefined,
-      PersonName: {
-        "@type": "PersonName",
-        Given: firstName,
-        Surname: lastName,
-        nameType: PAX_TYPE_MAP[type] || "Adult",
-      },
-      Gender: GENDER_MAP[gender] || GENDER_MAP[String(gender || "").toLowerCase()] || "Male",
+  const body = {
+    "@type": "Traveler",
+    gender: g,
+    passengerTypeCode: ptc,
+    id: `trav_${index + 1}`,
+    PersonName: {
+      "@type": "PersonNameDetail",
+      Prefix: PREFIX_MAP[g],
+      Given: firstName,
+      Surname: lastName,
     },
   };
+  if (birthDate) body.birthDate = birthDate;
 
-  // International travel: attach passport if present
+  // Contact — Travelport expects a phone (and usually email) on the traveler.
+  const phone = passenger.phone || contact.phone;
+  const email = passenger.email || contact.email;
+  if (phone) {
+    body.Telephone = [{
+      "@type": "Telephone",
+      countryAccessCode: String(contact.countryCode || "91"),
+      phoneNumber: String(phone).replace(/\D/g, "").slice(-10),
+      role: "Mobile",
+      id: `phone_${index + 1}`,
+    }];
+  }
+  if (email) {
+    body.Email = [{ value: email }];
+  }
+
+  // International travel: attach passport as a TravelDocument.
   if (passportNo) {
-    travelerBody.Traveler.IdentityDocument = {
-      "@type": "IdentityDocumentPassport",
-      documentNumber: passportNo,
+    body.TravelDocument = [{
+      "@type": "TravelDocumentDetail",
+      docNumber: passportNo,
       docType: "Passport",
-      expireDate: passportExpiry || undefined,
-      residenceCountryCode: nationality || undefined,
-      issuanceCountryCode: nationality || undefined,
-    };
+      expireDate: toTravelportDate(passportExpiry),
+      issueCountry: nationality || undefined,
+      birthDate,
+      birthCountry: nationality || undefined,
+      Gender: g,
+      PersonName: { "@type": "PersonName", Given: firstName, Surname: lastName },
+    }];
   }
 
-  if (dob) {
-    travelerBody.Traveler.birthDate = dob;
-  }
-
-  return travelerBody;
+  return body;
 }
 
-function calculateAge(dob) {
-  const birth = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birth.getFullYear();
-  const m = today.getMonth() - birth.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-  return age;
-}
-
-async function addTraveler(workbenchId, passenger, index) {
+async function addTraveler(workbenchId, passenger, index, contact = {}) {
   const path = `${TRAVELER_PATH_PREFIX}/${workbenchId}/travelers`;
-  const body = buildTravelerBody(passenger, index);
+  const body = buildTravelerBody(passenger, index, contact);
   const raw = await http.post(path, body);
 
   const travelerId =
     raw?.Traveler?.Identifier?.value ||
     raw?.Traveler?.id ||
     raw?.id ||
-    `traveler_${index + 1}`;
+    `trav_${index + 1}`;
 
   return travelerId;
 }
@@ -220,14 +252,38 @@ async function commitReservation(workbenchId) {
   const path = `${COMMIT_PATH_PREFIX}/${workbenchId}`;
   const raw  = await http.post(path, { "@type": "ReservationQueryCommitReservation" });
 
-  // After commit, the response contains the Reservation with a locator (PNR)
-  const reservation = raw?.Reservation || raw;
-  const locator     = reservation?.locator || reservation?.Locator?.value;
+  // Commit response shape (per Travelport reference):
+  //   ReservationResponse.Reservation.Receipt[].Confirmation.Locator.value  ← the PNR
+  const reservation =
+    raw?.ReservationResponse?.Reservation ||
+    raw?.Reservation ||
+    raw;
+
+  const receipts = Array.isArray(reservation?.Receipt)
+    ? reservation.Receipt
+    : (reservation?.Receipt ? [reservation.Receipt] : []);
+
+  let locator = null;
+  for (const rc of receipts) {
+    const l = rc?.Confirmation?.Locator;
+    const val = l && typeof l === "object" ? l.value : l;
+    if (val) { locator = val; break; }
+  }
+  // Fallbacks for other response shapes
+  if (!locator) {
+    locator = reservation?.locator || reservation?.Locator?.value || null;
+  }
+
   const resIdentifier =
     reservation?.Identifier?.value ||
-    reservation?.ReservationIdentifier?.Identifier?.value;
+    reservation?.ReservationIdentifier?.Identifier?.value ||
+    workbenchId; // workbench id is the reservation handle for follow-up ops
 
   if (!locator) {
+    logger.error("[Travelport] commitReservation: no PNR locator in response", {
+      reservationKeys: reservation && typeof reservation === "object" ? Object.keys(reservation) : typeof reservation,
+      bodySnippet: JSON.stringify(raw || "").slice(0, 3000),
+    });
     throw new Error("Travelport booking: no PNR locator in commit response");
   }
 
@@ -249,7 +305,7 @@ async function commitReservation(workbenchId) {
 
 // ── Orchestrated booking (steps 1-6) ─────────────────────────────────────────
 
-async function createBooking({ passengers, pricedOffer, contentSource = "GDS" }) {
+async function createBooking({ passengers, pricedOffer, contentSource = "GDS", contact = {} }) {
   if (!passengers || !passengers.length) {
     throw new Error("Travelport booking: at least one passenger is required");
   }
@@ -263,26 +319,17 @@ async function createBooking({ passengers, pricedOffer, contentSource = "GDS" })
   // Step 2: add all travelers (sequentially — Travelport requires ordering)
   const travelerIds = [];
   for (let i = 0; i < passengers.length; i++) {
-    const tId = await addTraveler(workbenchId, passengers[i], i);
+    const tId = await addTraveler(workbenchId, passengers[i], i, contact);
     travelerIds.push(tId);
   }
 
   // Step 3: add priced offer
-  const { offerIdentifier } = await addOffer(workbenchId, pricedOffer, contentSource);
+  await addOffer(workbenchId, pricedOffer, contentSource);
 
-  // Step 4: add FormOfPaymentCash (agency BSP billing)
-  const { fopId, fopIdentifier } = await addFormOfPaymentCash(workbenchId);
-
-  // Step 5: apply payment against the offer
-  await applyPayment(workbenchId, {
-    totalFare: pricedOffer.totalFare,
-    currency: pricedOffer.currency || "USD",
-    fopId,
-    fopIdentifier,
-    offerIdentifier,
-  });
-
-  // Step 6: commit — produces PNR + tickets in a single call (instant-pay flow)
+  // Step 4: commit — creates the held PNR. Per the Travelport reference flow, Form-of-Payment,
+  // Apply-Payment and Ticket issuance are a SEPARATE post-commit phase (re-open the workbench
+  // from the locator). Doing FOP/payment pre-commit leaves the workbench in a non-committable
+  // state ("COMMIT OR IGNORE RESERVATION WORKBENCH", 1G/4350).
   const result = await commitReservation(workbenchId);
 
   return {
